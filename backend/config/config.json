@@ -1,22 +1,8 @@
 {
   "development": {
-    "username": "root",
-    "password": "HjbbLSh7OY8fAVr6",
-    "database": "database_development",
-    "host": "127.0.0.1",
-    "dialect": "mysql"
-  },
-  "test": {
-    "username": "root",
-    "password": "HjbbLSh7OY8fAVr6",
-    "database": "database_test",
-    "host": "127.0.0.1",
-    "dialect": "mysql"
-  },
-  "production": {
-    "username": "root",
-    "password": "HjbbLSh7OY8fAVr6",
-    "database": "database_production",
+    "username": "newuser",
+    "password": "ocrstudent",
+    "database": "groupomania",
     "host": "127.0.0.1",
     "dialect": "mysql"
   }
