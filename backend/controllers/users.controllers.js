@@ -3,6 +3,8 @@ const jwt = require("../utils/jwt.utils");
 const models = require("../models/");
 require("dotenv").config({ path: "./config/.env" });
 
+
+// Création d'un utilisateur
 exports.signup = (req, res, next) => {
   let firstname = req.body.firstname;
   let lastname = req.body.lastname;
@@ -42,10 +44,13 @@ exports.signup = (req, res, next) => {
     return res.status(400).json({ error : "Mot de passe invalide"})
   }
 
+  // Vérifie si l'utilisateur existe déjà dans la BDD
   models.User.findOne({
     attributes: ["email"],
     where: { email: email },
   })
+
+  // S'il n'existe pas, alors il est créé
     .then((userFound) => {
       if (!userFound) {
         bcrypt.hash(password, 10, (err, bcryptedPassword) => {
@@ -70,6 +75,8 @@ exports.signup = (req, res, next) => {
     .catch((error) => res.status(500).json({ error }));
 };
 
+
+// Connexion d'un utilisateur
 exports.login = (req, res, next) => {
   const email = req.body.email;
   const password = req.body.password;
@@ -104,26 +111,23 @@ exports.login = (req, res, next) => {
     .catch((error) =>
       res.status(500).json({ error: "Vérification impossible" })
     );
+};
 
-  //   User.findOne({ email: req.body.email })
-  //     .then((user) => {
-  //       if (!user) {
-  //         return res.status(401).json({ error: "Utilisateur non trouvé" });
-  //       }
-  //       bcrypt
-  //         .compare(req.body.password, user.password)
-  //         .then((valid) => {
-  //           if (!valid) {
-  //             return res.status(401).json({ error: "Mot de passe incorrect" });
-  //           }
-  //           return res.status(200).json({
-  //             userId: user._id,
-  //             token: jwt.sign({ userId: user._id }, process.env.TOKEN, {
-  //               expiresIn: "24h",
-  //             }),
-  //           });
-  //         })
-  //         .catch((error) => res.status(500).json({ error }));
-  //     })
-  //     .catch((error) => res.status(500).json({ error }));
+// affichage du profil
+exports.getProfile = (req, res, next) => {
+  const headerAuth = req.headers['authorization'];
+  const userId = jwt.getUserId(headerAuth);
+models.User.findOne({
+  attributes: [ 'id', 'firstname', 'lastname', 'email'],
+  where: { id: userId}
+})
+.then((user) => {
+  if (user){
+    res.status(201).json(user)
+  }
+  else{
+    res.status(404).json({ error : "Utilisateur non trouvé"})
+  }
+})
+.catch((error) => res.status(500).json({ error : "Impossible de trouver l'utilisateur"}))
 };

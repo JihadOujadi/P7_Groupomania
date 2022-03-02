@@ -12,5 +12,17 @@ module.exports = {
         {
             expiresIn: '24h' 
         })
+    },
+    getUserId: (authorization) => {
+        const token = authorization.split(' ')[1];
+        if(token != null){
+            try {
+                const jwtToken = jwt.verify(token, JWTSIGN);
+                if (jwtToken != null)
+                    userId = jwtToken.userId;
+                
+            }catch(err){ }
+        }
+        return userId;
     }
 }
