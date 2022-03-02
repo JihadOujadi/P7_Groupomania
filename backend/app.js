@@ -1,10 +1,10 @@
 const express = require("express");
 const mysql = require("mysql");
-const mysql2 = require("mysql2");
+const db = require("./db/db");
 const path = require("path");
 const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
-const db = require("./models");
+const models = require("./models");
 const messagesRoutes = require("./routes/message.routes");
 const userRoutes = require("./routes/user.routes");
 require("dotenv").config({ path: "./config/.env" });
@@ -36,9 +36,9 @@ app.use((req, res, next) => {
   next();
 });
 
-db.sequelize.sync();
+models.sequelize.sync();
 
-app.use("/api/messages", messagesRoutes);
-app.use("/api/users", userRoutes);
+app.use("/api/messages/", messagesRoutes);
+app.use("/api/users/", userRoutes);
 
 module.exports = app;
