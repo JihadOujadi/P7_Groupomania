@@ -131,3 +131,38 @@ models.User.findOne({
 })
 .catch((error) => res.status(500).json({ error : "Impossible de trouver l'utilisateur"}))
 };
+
+// Mise à jour du profil
+exports.updateProfile = (req, res, next) => {
+
+  const headerAuth = req.headers['authorization'];
+  const userId = jwt.getUserId(headerAuth);
+
+let firstname = req.body.firstname;
+let lastname = req.body.lastname;
+
+models.User.findOne({
+atributes: [ 'id', 'firstname', 'lastname' ],
+where: { id: userId }
+})
+.then((userFound) => {
+  if (userFound) {
+    userFound.update ({
+      firstname: (firstname ? firstname : userFound.firstname),
+      lastname: ( lastname ? lastname: userFound.lastname)  
+      })
+        .then((userFound) => {
+          return res.status(201).json({
+            userId: userFound.id,
+            message: "Profil mis à jour"
+          });
+        })
+        .catch((error) => res.status(500).json({ error }));
+    }
+    else {
+    return res.status(409).json({ error: "Mis à jour impossible" });
+  }
+})
+.catch((error) => res.status(500).json({ error }));
+
+};
