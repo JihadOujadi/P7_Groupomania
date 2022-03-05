@@ -1,19 +1,28 @@
 const jwt = require("jsonwebtoken");
 require('dotenv').config();
+const JWTSIGN = process.env.TOKEN;
 
-
-module.exports = (req, res, next) => {
-try {
-const  token = req.headers.authorization.split(' ')[1];
-const decodeToken = jwt.verify(token, process.env.TOKEN);
-const userId = decodeToken.userId;
-req.auth = { userId };
-if (req.body.userId && req.body.userId !== userId){
-    throw 'User Id non valable'
-}else{
-    next();
+module.exports = {
+    generateTokenForUser: (userData) => {
+        return jwt.sign({
+            userId: userData.id,
+            isAdmin: userData.isAdmin
+        },
+        JWTSIGN,
+        {
+            expiresIn: '24h' 
+        })
+    },
+    getUserId: (authorization) => {
+        const token = authorization.split(' ')[1];
+        if(token != null){
+            try {
+                const jwtToken = jwt.verify(token, JWTSIGN);
+                if (jwtToken != null)
+                    userId = jwtToken.userId;
+                
+            }catch(err){ }
+        }
+        return userId;
+    }
 }
-}catch (error){
-    res.status(401).json({ error: error | 'Requête non authentifiée'});
-}
-};
