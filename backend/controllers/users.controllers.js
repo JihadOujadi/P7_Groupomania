@@ -1,3 +1,4 @@
+const { log } = require("async");
 const bcrypt = require("bcrypt");
 const jwt = require("../middlewares/auth");
 const models = require("../models/");
@@ -51,27 +52,27 @@ exports.signup = (req, res, next) => {
 
     // S'il n'existe pas, alors il est créé
     .then((user) => {
-        if (!user) {
-          bcrypt.hash(password, 10, (err, hash) => {
-            let newUser = models.User.create({
-              firstname: firstname,
-              lastname: lastname,
-              email: email,
-              password: hash,
-              isAdmin: 0,
+      if (!user) {
+        bcrypt.hash(password, 10, (err, hash) => {
+          let newUser = models.User.create({
+            firstname: firstname,
+            lastname: lastname,
+            email: email,
+            password: hash,
+            isAdmin: 0,
+          })
+            .then((newUser) => {
+              return res.status(201).json({
+                userId: newUser.id,
+                message: "Utilisateur créé",
+              });
             })
-              .then((newUser) => {
-                return res.status(201).json({
-                  userId: newUser.id,
-                  message: "Utilisateur créé"
-                });
-              })
-              .catch((error) => res.status(500).json({ error }));
-          });
-        } else {
-          return res.status(409).json({ error: "Utilisateur déjà existant" });
-        }
-      })
+            .catch((error) => res.status(500).json({ error }));
+        });
+      } else {
+        return res.status(409).json({ error: "Utilisateur déjà existant" });
+      }
+    })
     .catch((error) => res.status(500).json({ error }));
 };
 
@@ -79,8 +80,6 @@ exports.signup = (req, res, next) => {
 exports.login = (req, res, next) => {
   const email = req.body.email;
   const password = req.body.password;
-  
-  
 
   if (email == null || password == null) {
     return res.status(400).json({ error: "Champs manquant(s)" });
@@ -89,30 +88,26 @@ exports.login = (req, res, next) => {
   models.User.findOne({
     where: { email: email },
   })
-  .then((user) => {
-  
-    if (user) {
-      bcrypt.compare(
-        password,
-        user.password,
-        (errBycrypt, resBycrypt) => {
+    .then((user) => {
+      if (user) {
+        bcrypt.compare(password, user.password, (errBycrypt, resBycrypt) => {
           if (resBycrypt) {
+
             return res.status(200).json({
               userId: user.id,
-              token: jwt.generateTokenForUser(user)
+              token: jwt.generateTokenForUser(user),
             });
           } else {
             return res.status(403).json({ error: "Mot de passe invalide" });
           }
-        }
-      );
-    } else {
-      return res.status(404).json({ error: "Utilisateur inexistant" });
-    }
-  })
-  .catch((error) =>
-    res.status(500).json({ error: "Vérification impossible" })
-  )
+        });
+      } else {
+        return res.status(404).json({ error: "Utilisateur inexistant" });
+      }
+    })
+    .catch((error) =>
+      res.status(500).json({ error: "Vérification impossible" })
+    )
     .catch((error) =>
       res.status(500).json({ error: "Vérification impossible" })
     );
@@ -120,7 +115,7 @@ exports.login = (req, res, next) => {
 
 // affichage du profil
 exports.getProfile = (req, res, next) => {
-  const headerAuth = req.headers['authorization'];
+  const headerAuth = req.headers.authorization;
   const userId = jwt.getUserId(headerAuth);
 
   models.User.findOne({
@@ -141,7 +136,7 @@ exports.getProfile = (req, res, next) => {
 
 // Mise à jour du profil
 exports.updateProfile = (req, res, next) => {
-  const headerAuth = req.headers['authorization'];
+  const headerAuth = req.headers.authorization;
   const userId = jwt.getUserId(headerAuth);
 
   let firstname = req.body.firstname;
@@ -149,16 +144,16 @@ exports.updateProfile = (req, res, next) => {
   let email = req.body.email;
 
   models.User.findOne({
-    atributes: ['id', 'firstname', 'lastname', 'email'],
+    atributes: ["id", "firstname", "lastname", "email"],
     where: { id: userId },
   })
     .then((user) => {
       if (user) {
         user
           .update({
-            firstname: (firstname ? firstname : user.firstname),
-            lastname: (lastname ? lastname : user.lastname),
-            email: (email ? email : user.email)
+            firstname: firstname ? firstname : user.firstname,
+            lastname: lastname ? lastname : user.lastname,
+            email: email ? email : user.email,
           })
           .then((user) => {
             return res.status(201).json({
@@ -173,3 +168,27 @@ exports.updateProfile = (req, res, next) => {
     })
     .catch((error) => res.status(500).json({ error }));
 };
+
+// Suppression du compte utilisateur
+exports.deleteUser = (req, res, next) => {
+  const headerAuth = req.headers.authorization;
+  const userId = jwt.getUserId(headerAuth);
+
+  models.User.findOne({
+    atributes: ["id"],
+    where: { id: userId },
+  })
+    .then((user) => {
+      if (user) {
+        user.destroy()
+          .then(() => res.status(200).json({ message: "Compte supprimé !" }))
+          .catch((error) => res.status(400).json({ error }));
+      } else {
+        return res.status(404).json({ error: "Suppression impossible" });
+        
+      }
+    })
+    .catch((error) => res.status(500).json({ error: error }));
+};
+
+// modification  du mot de passe
