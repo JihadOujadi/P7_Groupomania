@@ -31,17 +31,16 @@ module.exports = {
     },
 
     getUser: (req, res, next) =>{
-        try {
-            const  token = req.headers.authorization.split(' ')[1];
-            const jwtToken = jwt.verify(token, JWTSIGN);
-            const userId = jwtToken.userId;
-            if (req.body.userId && req.body.userId !== userId){
-                throw 'User Id non valable'
-            }else{
-                next();
-            }
-            }catch (error){
-                return res.status(401).json({ error: 'Requête non authentifiée'});
-            }
+        const  token = req.headers.authorization.split(' ')[1];
+
+        if (token == null) return res.status(401).json({ error : "Token Invalide"});
+
+  jwt.verify(token, JWTSIGN, (err, user) => {
+    if (err) {
+      return res.status(401).json({ error : "Vérification impossible"});
+    }
+    req.user = user;
+    next();
+  });
     }
 }

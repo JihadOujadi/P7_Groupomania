@@ -2,6 +2,7 @@ const { log } = require("async");
 const bcrypt = require("bcrypt");
 const jwt = require("../middlewares/auth");
 const models = require("../models/");
+const user = require("../models/user");
 require("dotenv").config({ path: "./config/.env" });
 
 // Création d'un utilisateur
@@ -118,9 +119,10 @@ exports.getProfile = (req, res, next) => {
   const headerAuth = req.headers.authorization;
   const userId = jwt.getUserId(headerAuth);
 
+
   models.User.findOne({
     attributes: ["id", "firstname", "lastname", "email"],
-    where: { id: userId },
+    where: { id: userId},
   })
     .then((user) => {
       if (user) {
