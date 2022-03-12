@@ -109,9 +109,6 @@ exports.login = (req, res, next) => {
     .catch((error) =>
       res.status(500).json({ error: "Vérification impossible" })
     )
-    .catch((error) =>
-      res.status(500).json({ error: "Vérification impossible" })
-    );
 };
 
 // affichage du profil
@@ -173,6 +170,7 @@ exports.updateProfile = (req, res, next) => {
 
 // Suppression du compte utilisateur
 exports.deleteUser = (req, res, next) => {
+  
   const headerAuth = req.headers.authorization;
   const userId = jwt.getUserId(headerAuth);
 
@@ -194,3 +192,41 @@ exports.deleteUser = (req, res, next) => {
 };
 
 // modification  du mot de passe
+exports.updatePassword = (req, res, next) => {
+
+  const headerAuth = req.headers.authorization;
+  const userId = jwt.getUserId(headerAuth);
+
+  const password = req.body.password;
+
+  models.User.findOne({
+    where: { password: password },
+  })
+  
+    .then((password) => {
+      
+      if (password) {
+        bcrypt.compare(password, user.password, (errBycrypt, resBycrypt) => {
+          if (resBycrypt) {
+            password
+          .update({
+            password: password ? password : hash
+          })
+
+            return res.status(200).json({
+              userId: user.id,
+              token: jwt.generateTokenForUser(user),
+              message : "Mot de passe mis à jour"
+            });
+          } else {
+            return res.status(403).json({ error: "Mot de passe invalide" });
+          }
+        });
+      } else {
+        return res.status(404).json({ error: "Utilisateur inexistant" });
+      }
+    })
+    .catch((error) =>
+      res.status(500).json({ error: "Vérification impossible" })
+    )
+};

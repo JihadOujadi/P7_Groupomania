@@ -5,7 +5,7 @@ const path = require("path");
 const helmet = require("helmet");
 const rateLimit = require("express-rate-limit");
 const models = require("./models");
-const messageRoutes = require("./routes/message.routes");
+const postsRoutes = require("./routes/post.routes");
 const userRoutes = require("./routes/user.routes");
 require("dotenv").config({ path: "./config/.env" });
 
@@ -38,7 +38,9 @@ app.use((req, res, next) => {
 
 models.sequelize.sync();
 
-app.use("/api/posts/", messageRoutes);
+app.use("/images", express.static(path.join(__dirname, "images")));
+
+app.use("/api/posts/", postsRoutes);
 app.use("/api/users/", userRoutes);
 
 module.exports = app;
