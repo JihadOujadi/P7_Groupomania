@@ -20,7 +20,8 @@ module.exports = (sequelize, DataTypes) => {
     lastname: DataTypes.STRING,
     email: DataTypes.STRING,
     password: DataTypes.STRING,
-    pictures: DataTypes.STRING,
+    pictures: {type: DataTypes.STRING,
+    defaultValue: ''},
     isAdmin: DataTypes.BOOLEAN
   }, {
     sequelize,

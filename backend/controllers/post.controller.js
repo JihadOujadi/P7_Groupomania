@@ -152,3 +152,9 @@ exports.deletePost = (req, res, next) => {
 exports.likePost = (req, res, next) => {
   
 };
+
+exports.addComment = (req, res, next) => {
+  return res.status(200).json({ user : req.user});
+  const userId = req.user.userId;
+
+};

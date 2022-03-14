@@ -1,4 +1,3 @@
-const { log } = require("async");
 const bcrypt = require("bcrypt");
 const jwt = require("../middlewares/auth");
 const models = require("../models/");
@@ -55,26 +54,26 @@ exports.signup = (req, res, next) => {
     .then((user) => {
       if (!user) {
         bcrypt.hash(password, 10, (err, hash) => {
-          let newUser = models.User.create({
+          models.User.create({
             firstname: firstname,
             lastname: lastname,
             email: email,
-            password: hash,
-            isAdmin: 0,
+            password: hash, 
+            isAdmin: 0
           })
-            .then((newUser) => {
+            .then((user) => {
               return res.status(201).json({
-                userId: newUser.id,
+                userId: user.id,
                 message: "Utilisateur créé",
               });
             })
-            .catch((error) => res.status(500).json({ error }));
+            .catch((error) => res.status(500).json({ error : "Création impossible"}));
         });
       } else {
         return res.status(409).json({ error: "Utilisateur déjà existant" });
       }
     })
-    .catch((error) => res.status(500).json({ error }));
+    .catch((error) => res.status(500).json({ error : "Vérification impossible"}));
 };
 
 // Connexion d'un utilisateur
@@ -86,35 +85,29 @@ exports.login = (req, res, next) => {
     return res.status(400).json({ error: "Champs manquant(s)" });
   }
 
-  models.User.findOne({
-    where: { email: email },
-  })
-    .then((user) => {
-      if (user) {
-        bcrypt.compare(password, user.password, (errBycrypt, resBycrypt) => {
-          if (resBycrypt) {
-
-            return res.status(200).json({
-              userId: user.id,
-              token: jwt.generateTokenForUser(user),
-            });
-          } else {
-            return res.status(403).json({ error: "Mot de passe invalide" });
-          }
-        });
-      } else {
-        return res.status(404).json({ error: "Utilisateur inexistant" });
-      }
+  models.User.findOne({ email: email })
+.then(user => {
+if (!user){
+    return res.status(401).json({ error : 'Utilisateur non trouvé' });
+}
+bcrypt.compare(password, user.password)
+.then(valid =>{
+    if(!valid){
+        return res.status(401).json({ error : 'Mot de passe incorrect' });
+    }
+    return res.status(200).json({
+        userId: user.id,
+        token: jwt.generateTokenForUser(user)
     })
-    .catch((error) =>
-      res.status(500).json({ error: "Vérification impossible" })
-    )
+})
+.catch(error => res.status(500).json({ error }));
+})
+.catch(error => res.status(500).json({ error }));
 };
 
 // affichage du profil
 exports.getProfile = (req, res, next) => {
-  const headerAuth = req.headers.authorization;
-  const userId = jwt.getUserId(headerAuth);
+  const userId = req.user.userId;
 
 
   models.User.findOne({
@@ -135,44 +128,57 @@ exports.getProfile = (req, res, next) => {
 
 // Mise à jour du profil
 exports.updateProfile = (req, res, next) => {
-  const headerAuth = req.headers.authorization;
-  const userId = jwt.getUserId(headerAuth);
+  const userId = req.user.userId
 
-  let firstname = req.body.firstname;
-  let lastname = req.body.lastname;
-  let email = req.body.email;
+  if (req.files) {
+    models.User.findOne({ where: { id: userId } })
+      .then((user) => {
+        if(req.files.pictures){
+          const pictures = user.pictures.split("/images/")[1];
+          if(pictures != undefined){
+            fs.unlink(`images/${pictures}`, (error) => {
+              if (error) res.status(400).json({ error });
+            });
+          }
+        }
+      })
+      .catch((error) => res.status(400).json({ error }));
+  }
+
+  const editUser = req.files
+    ? {
+        ...JSON.parse(req.body.user),
+        pictures: req.files.pictures
+          ? `${req.protocol}://${req.get("host")}/images/${
+              req.files.pictures[0].filename
+            }`
+          : req.body.pictures
+      }
+    : { ...req.body };
 
   models.User.findOne({
-    atributes: ["id", "firstname", "lastname", "email"],
     where: { id: userId },
   })
     .then((user) => {
-      if (user) {
-        user
-          .update({
-            firstname: firstname ? firstname : user.firstname,
-            lastname: lastname ? lastname : user.lastname,
-            email: email ? email : user.email,
-          })
-          .then((user) => {
-            return res.status(201).json({
-              userId: user.id,
-              message: "Profil mis à jour",
-            });
-          })
-          .catch((error) => res.status(500).json({ error }));
-      } else {
-        return res.status(409).json({ error: "Mis à jour impossible" });
-      }
+      user
+        .update(editUser)
+        .then((user) => {
+          if (user) return res.status(201).json(user);
+          else
+            return res
+              .status(500)
+              .json({ error: "Mis à jour du profil impossible" });
+        })
+        .catch(() => {
+          res.status(500).json({ error: "Mis à jour impossible" });
+        });
     })
-    .catch((error) => res.status(500).json({ error }));
+    .catch(() => res.status(500).json({ error: "Vérification impossible" }));
 };
 
 // Suppression du compte utilisateur
 exports.deleteUser = (req, res, next) => {
-  
-  const headerAuth = req.headers.authorization;
-  const userId = jwt.getUserId(headerAuth);
+  const userId = req.user.userId;
 
   models.User.findOne({
     atributes: ["id"],
@@ -194,39 +200,37 @@ exports.deleteUser = (req, res, next) => {
 // modification  du mot de passe
 exports.updatePassword = (req, res, next) => {
 
-  const headerAuth = req.headers.authorization;
-  const userId = jwt.getUserId(headerAuth);
+  const userId = req.user.userId;
 
-  const password = req.body.password;
+  const { oldPassword, newPassword} = req.body;
 
-  models.User.findOne({
-    where: { password: password },
-  })
-  
-    .then((password) => {
-      
-      if (password) {
-        bcrypt.compare(password, user.password, (errBycrypt, resBycrypt) => {
-          if (resBycrypt) {
-            password
-          .update({
-            password: password ? password : hash
-          })
-
-            return res.status(200).json({
+  models.User.findOne({ id: userId })
+.then(user => {
+if (!user){
+    return res.status(401).json({ error : 'Utilisateur non trouvé' });
+}
+bcrypt.compare(oldPassword, user.password)
+.then(valid =>{
+    if(!valid){
+        return res.status(401).json({ error : 'Mot de passe incorrect' });
+    }
+    else{
+      bcrypt.hash(newPassword, 10, (err, hash) => {
+        user.update({
+          password: hash,
+          where: {id: userId}
+        })
+          .then((user) => {
+            return res.status(201).json({
               userId: user.id,
-              token: jwt.generateTokenForUser(user),
-              message : "Mot de passe mis à jour"
+              message: "Mot de passe modifié",
             });
-          } else {
-            return res.status(403).json({ error: "Mot de passe invalide" });
-          }
-        });
-      } else {
-        return res.status(404).json({ error: "Utilisateur inexistant" });
-      }
-    })
-    .catch((error) =>
-      res.status(500).json({ error: "Vérification impossible" })
-    )
+          })
+          .catch((error) => res.status(500).json({ error : "Modification impossible"}));
+      });
+    } 
+})
+.catch(error => res.status(500).json({ error : "Impossible de modifier le mot de passe"}));
+})
+.catch(error => res.status(500).json({ error : "Vérification impossible"}));
 };
