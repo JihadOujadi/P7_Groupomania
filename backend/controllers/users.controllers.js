@@ -85,11 +85,12 @@ exports.login = (req, res, next) => {
     return res.status(400).json({ error: "Champs manquant(s)" });
   }
 
-  models.User.findOne({ email: email })
+  models.User.findOne({ where: {email: email} })
 .then(user => {
 if (!user){
     return res.status(401).json({ error : 'Utilisateur non trouvé' });
 }
+console.log(user);
 bcrypt.compare(password, user.password)
 .then(valid =>{
     if(!valid){
@@ -102,6 +103,7 @@ bcrypt.compare(password, user.password)
 })
 .catch(error => res.status(500).json({ error }));
 })
+
 .catch(error => res.status(500).json({ error }));
 };
 
@@ -111,7 +113,7 @@ exports.getProfile = (req, res, next) => {
 
 
   models.User.findOne({
-    attributes: ["id", "firstname", "lastname", "email"],
+    attributes: ["firstname", "lastname", "email"],
     where: { id: userId},
   })
     .then((user) => {
