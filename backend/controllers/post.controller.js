@@ -3,7 +3,6 @@ const jwt = require("../middlewares/auth");
 const fs = require("fs");
 require("dotenv").config({ path: "./config/.env" });
 
-
 // Middleware Posts
 
 exports.createPost = (req, res, next) => {
@@ -20,6 +19,9 @@ exports.createPost = (req, res, next) => {
         let newMessage = models.Message.create({
           title: title,
           content: content,
+          image: req.body.content && req.file
+          ? `${req.protocol}://${req.get("host")}/images/${req.file.filename}`
+          : null,
           likes: 0,
           userId: userId,
         })
@@ -58,7 +60,7 @@ exports.getAllPost = (req, res, next) => {
     offset: !isNaN(offset) ? offset : null,
     include: {
       model: models.User,
-      attributes: ["firstname", "lastname"]
+      attributes: ["firstname", "lastname"],
     },
   })
     .then((messages) => {
@@ -88,25 +90,46 @@ exports.modifyPost = (req, res, next) => {
   })
     .then((messages) => {
       console.log(messages);
+      
 
-      if (messages) {
-        messages
-          .update({
-            title: title ? title : messages.title,
-            content: content ? content : messages.content,
-          })
-          .then((user) => {
-            return res.status(201).json({
-              userId: user.id,
-              message: "Post mis à jour",
-            });
-          })
-          .catch((error) => res.status(500).json({ error }));
+      if (messages.userId === userId || isAdmin === true) {
+        if (messages.image !== null) {
+          const filename = messages.image.split("/images/")[1];
+          fs.unlink(`images/${filename}`, () => {
+            messages
+              .update({
+                title: title ? title : messages.title,
+                content: content ? content : content.title,
+                image: `${req.protocol}://${req.get("host")}/images/${
+                  req.file.filename
+                }`
+              })
+              .then(() =>
+                res.status(200).json({ message: "Post mis à jour !" })
+              )
+              .catch((error) =>
+                res.status(400).json({ error: "Modification impossible" })
+              );
+          });
+        }
+
+        // messages
+        //   .update({
+        //     title: title ? title : messages.title,
+        //     content: content ? content : messages.content,
+        //   })
+        //   .then((user) => {
+        //     return res.status(201).json({
+        //       userId: user.id,
+        //       message: "Post mis à jour",
+        //     });
+        //   })
+        //   .catch((error) => res.status(500).json({ error }));
       } else {
         return res.status(409).json({ error: "Mis à jour impossible" });
       }
     })
-    .catch((error) => res.status(500).json({ error }));
+    .catch((error) => res.status(500).json({ error : "Vérification impossible"}));
 };
 
 exports.deletePost = (req, res, next) => {
@@ -126,7 +149,9 @@ exports.deletePost = (req, res, next) => {
               .then(() =>
                 res.status(200).json({ message: "Message supprimé !" })
               )
-              .catch((error) => res.status(400).json({ error : "Suppression impossible" }));
+              .catch((error) =>
+                res.status(400).json({ error: "Suppression impossible" })
+              );
           });
         } else {
           message
@@ -156,9 +181,89 @@ exports.deletePost = (req, res, next) => {
 
 exports.likePost = (req, res, next) => {
 
+const userId = req.user.userId;
+const messageId = req.params.id;
+
+  models.Message.findOne({
+    where: { id: messageId },
+  })
+    .then((messageFound) => {
+      if (messageFound) {
+        models.User.findOne({
+          where: { id: userId },
+        })
+
+          .then((userFound) => {
+            if (userFound) {
+              models.Like.findOne({
+                where: {
+                  userId: userFound.id,
+                  messageId: messageFound.id,
+                },
+              })
+                .then((userAlreadyLike) => {
+                  if (!userAlreadyLike) {
+                    models.Like.create({
+                      userId: userId,
+                      messageId: messageId,
+                    })
+
+                      .then(() => {
+                        messageFound
+                          .update(
+                            { like: messageFound.like + 1 },
+                            { where: { id: messageFound.id } }
+                          )
+                          .then(() =>
+                            res.status(200).json({ message: "Post liked" })
+                          )
+                          .catch((err) => res.status(500).json({ err }));
+                      })
+                      .catch((err) => res.status(500).json(err));
+                  } else {
+                    models.Like.destroy({
+                      where: {
+                        userId: userFound.id,
+                        messageId: messageFound.id,
+                      },
+                    })
+                      .then(() => {
+                        messageFound.update(
+                          { like: messageFound.like - 1 },
+                          { where: { id: messageFound.id } }
+                        );
+                        if (messageFound.like < 0) {
+                          messageFound.like = 0;
+                        }
+                      })
+                      .then(() => {
+                        res.status(201).json({ message: "Post unliked" });
+                      });
+                  }
+                })
+                .catch((err) => {
+                  res
+                    .status(404)
+                    .json({ error: "Impossible de liker le post" });
+                });
+            } else {
+              res.status(500).json({ error: "Utilisateur non trouvé" });
+            }
+          })
+          .catch((err) => {
+            (err) =>
+              res
+                .status(500)
+                .json({ error: "Impossible de vérifier l'utilisateur" });
+          });
+      } else {
+        res.status(404).json({ error: "Le message n'existe pas" });
+      }
+    })
+    .catch((err) => res.status(500).json({ error: "Vérification impossible" }));
 };
 
-// Middleware Commentaire 
+// Middleware Commentaire
 
 exports.addComment = (req, res, next) => {
   const userId = req.user.userId;
@@ -166,38 +271,38 @@ exports.addComment = (req, res, next) => {
   const content = req.body.content;
 
   models.Message.findOne({
-    where: { id: messageId }
+    where: { id: messageId },
   })
     .then((message) => {
-
       let newComment = models.Comment.create({
         userId: userId,
         messageId: messageId,
         content: content,
       })
-        .then((newComment) => res.status(201).json({ message: "Commentaire enregistré !", body: newComment }))
+        .then((newComment) =>
+          res
+            .status(201)
+            .json({ message: "Commentaire enregistré !", body: newComment })
+        )
         .catch((error) => res.status(500).json(error));
     })
-    
+
     .catch((error) => res.status(500).json({ error: "  " }));
 };
 
-
-exports.getComment = (req,res,next) => {
-
+exports.getComment = (req, res, next) => {
   const messageId = req.params.id;
   const fields = req.body.fields;
   const order = req.body.order;
-
 
   models.Comment.findAll({
     order: [order != null ? order.split(":") : ["content", "ASC"]],
     attributes: fields !== "*" && fields != null ? fields.split(",") : null,
     include: {
       model: models.User,
-      attributes: ["firstname", "lastname"]
+      attributes: ["firstname", "lastname"],
     },
-    where: {messageId: messageId}
+    where: { messageId: messageId },
   })
     .then((comments) => {
       console.log(comments);
@@ -213,28 +318,28 @@ exports.getComment = (req,res,next) => {
     });
 };
 
-exports.deleteComment = (req,res,next) =>{
+exports.deleteComment = (req, res, next) => {
   const userId = req.user.userId;
   const messageId = req.params.messageId;
   const contentId = req.params.id;
 
   models.Comment.findOne({
-    where: { messageId: messageId ,id: contentId},
+    where: { messageId: messageId, id: contentId },
   })
     .then((comment) => {
       if (comment.userId === userId || isAdmin === true) {
-          comment
-            .destroy()
-            .then(() => {
-              res.status(201).json({
-                message: "Commentaire supprimé !",
-              });
-            })
-            .catch((error) => {
-              res.status(404).json({
-                error: "Le commentaire n'a pas pu être supprimé"
-              });
+        comment
+          .destroy()
+          .then(() => {
+            res.status(201).json({
+              message: "Commentaire supprimé !",
             });
+          })
+          .catch((error) => {
+            res.status(404).json({
+              error: "Le commentaire n'a pas pu être supprimé",
+            });
+          });
       }
     })
     .catch((error) => {
@@ -242,4 +347,4 @@ exports.deleteComment = (req,res,next) =>{
         error: "Vérification impossible",
       });
     });
-}
+};
