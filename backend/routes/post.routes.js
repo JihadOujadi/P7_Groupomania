@@ -10,6 +10,7 @@ const postsControl = require('../controllers/post.controller');
 
 router.post('/new', auth.getUser, multer, postsControl.createPost);
 router.get('/', multer, postsControl.getAllPost);
+router.get('/:id', auth.getUser, postsControl.getOnePost);
 router.put('/:id', auth.getUser, multer, postsControl.modifyPost);
 router.delete('/:id', auth.getUser, multer, postsControl.deletePost);
 router.post('/comment/:id', auth.getUser, postsControl.addComment);

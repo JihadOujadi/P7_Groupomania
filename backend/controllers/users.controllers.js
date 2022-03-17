@@ -58,8 +58,8 @@ exports.signup = (req, res, next) => {
             firstname: firstname,
             lastname: lastname,
             email: email,
-            password: hash, 
-            isAdmin: 0
+            password: hash,
+            isAdmin: 0,
           })
             .then((user) => {
               return res.status(201).json({
@@ -67,13 +67,17 @@ exports.signup = (req, res, next) => {
                 message: "Utilisateur créé",
               });
             })
-            .catch((error) => res.status(500).json({ error : "Création impossible"}));
+            .catch((error) =>
+              res.status(500).json({ error: "Création impossible" })
+            );
         });
       } else {
         return res.status(409).json({ error: "Utilisateur déjà existant" });
       }
     })
-    .catch((error) => res.status(500).json({ error : "Vérification impossible"}));
+    .catch((error) =>
+      res.status(500).json({ error: "Vérification impossible" })
+    );
 };
 
 // Connexion d'un utilisateur
@@ -85,36 +89,36 @@ exports.login = (req, res, next) => {
     return res.status(400).json({ error: "Champs manquant(s)" });
   }
 
-  models.User.findOne({ where: {email: email} })
-.then(user => {
-if (!user){
-    return res.status(401).json({ error : 'Utilisateur non trouvé' });
-}
-console.log(user);
-bcrypt.compare(password, user.password)
-.then(valid =>{
-    if(!valid){
-        return res.status(401).json({ error : 'Mot de passe incorrect' });
-    }
-    return res.status(200).json({
-        userId: user.id,
-        token: jwt.generateTokenForUser(user)
+  models.User.findOne({ where: { email: email } })
+    .then((user) => {
+      if (!user) {
+        return res.status(401).json({ error: "Utilisateur non trouvé" });
+      }
+      console.log(user);
+      bcrypt
+        .compare(password, user.password)
+        .then((valid) => {
+          if (!valid) {
+            return res.status(401).json({ error: "Mot de passe incorrect" });
+          }
+          return res.status(200).json({
+            userId: user.id,
+            token: jwt.generateTokenForUser(user),
+          });
+        })
+        .catch((error) => res.status(500).json({ error }));
     })
-})
-.catch(error => res.status(500).json({ error }));
-})
 
-.catch(error => res.status(500).json({ error }));
+    .catch((error) => res.status(500).json({ error }));
 };
 
 // affichage du profil
 exports.getProfile = (req, res, next) => {
   const userId = req.user.userId;
 
-
   models.User.findOne({
     attributes: ["firstname", "lastname", "email"],
-    where: { id: userId},
+    where: { id: userId },
   })
     .then((user) => {
       if (user) {
@@ -130,14 +134,14 @@ exports.getProfile = (req, res, next) => {
 
 // Mise à jour du profil
 exports.updateProfile = (req, res, next) => {
-  const userId = req.user.userId
+  const userId = req.user.userId;
 
   if (req.files) {
     models.User.findOne({ where: { id: userId } })
       .then((user) => {
-        if(req.files.pictures){
+        if (req.files.pictures) {
           const pictures = user.pictures.split("/images/")[1];
-          if(pictures != undefined){
+          if (pictures != undefined) {
             fs.unlink(`images/${pictures}`, (error) => {
               if (error) res.status(400).json({ error });
             });
@@ -154,7 +158,7 @@ exports.updateProfile = (req, res, next) => {
           ? `${req.protocol}://${req.get("host")}/images/${
               req.files.pictures[0].filename
             }`
-          : req.body.pictures
+          : req.body.pictures,
       }
     : { ...req.body };
 
@@ -188,12 +192,12 @@ exports.deleteUser = (req, res, next) => {
   })
     .then((user) => {
       if (user) {
-        user.destroy()
+        user
+          .destroy()
           .then(() => res.status(200).json({ message: "Compte supprimé !" }))
           .catch((error) => res.status(400).json({ error }));
       } else {
         return res.status(404).json({ error: "Suppression impossible" });
-        
       }
     })
     .catch((error) => res.status(500).json({ error: error }));
@@ -201,38 +205,46 @@ exports.deleteUser = (req, res, next) => {
 
 // modification  du mot de passe
 exports.updatePassword = (req, res, next) => {
-
   const userId = req.user.userId;
 
-  const { oldPassword, newPassword} = req.body;
+  const { oldPassword, newPassword } = req.body;
 
   models.User.findOne({ id: userId })
-.then(user => {
-if (!user){
-    return res.status(401).json({ error : 'Utilisateur non trouvé' });
-}
-bcrypt.compare(oldPassword, user.password)
-.then(valid =>{
-    if(!valid){
-        return res.status(401).json({ error : 'Mot de passe incorrect' });
-    }
-    else{
-      bcrypt.hash(newPassword, 10, (err, hash) => {
-        user.update({
-          password: hash,
-          where: {id: userId}
-        })
-          .then((user) => {
-            return res.status(201).json({
-              userId: user.id,
-              message: "Mot de passe modifié",
+    .then((user) => {
+      if (!user) {
+        return res.status(401).json({ error: "Utilisateur non trouvé" });
+      }
+      bcrypt
+        .compare(oldPassword, user.password)
+        .then((valid) => {
+          if (!valid) {
+            return res.status(401).json({ error: "Mot de passe incorrect" });
+          } else {
+            bcrypt.hash(newPassword, 10, (err, hash) => {
+              user
+                .update({
+                  password: hash,
+                  where: { id: userId },
+                })
+                .then((user) => {
+                  return res.status(201).json({
+                    userId: user.id,
+                    message: "Mot de passe modifié",
+                  });
+                })
+                .catch((error) =>
+                  res.status(500).json({ error: "Modification impossible" })
+                );
             });
-          })
-          .catch((error) => res.status(500).json({ error : "Modification impossible"}));
-      });
-    } 
-})
-.catch(error => res.status(500).json({ error : "Impossible de modifier le mot de passe"}));
-})
-.catch(error => res.status(500).json({ error : "Vérification impossible"}));
+          }
+        })
+        .catch((error) =>
+          res
+            .status(500)
+            .json({ error: "Impossible de modifier le mot de passe" })
+        );
+    })
+    .catch((error) =>
+      res.status(500).json({ error: "Vérification impossible" })
+    );
 };

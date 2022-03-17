@@ -12,26 +12,23 @@ module.exports = (sequelize, DataTypes) => {
       models.Message.belongsTo(models.User, {
         foreignKey: {
           name: "userId",
-          allowNull: false
-        }
+          allowNull: false,
+        },
       });
       models.Message.hasMany(models.Comment, {
         foreignKey: {
           name: "messageId",
-          allowNull: false
-        }
+          allowNull: false,
+        },
       });
-      
     }
-    
   }
   Message.init(
     {
       title: DataTypes.STRING,
       content: DataTypes.STRING,
       image: DataTypes.STRING,
-      likes: {type: DataTypes.INTEGER,
-        defaultValue: 0}
+      likes: { type: DataTypes.INTEGER, defaultValue: 0 },
     },
     {
       sequelize,

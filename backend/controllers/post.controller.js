@@ -19,9 +19,12 @@ exports.createPost = (req, res, next) => {
         let newMessage = models.Message.create({
           title: title,
           content: content,
-          image: req.body.content && req.file
-          ? `${req.protocol}://${req.get("host")}/images/${req.file.filename}`
-          : null,
+          image:
+            req.body.content && req.file
+              ? `${req.protocol}://${req.get("host")}/images/${
+                  req.file.filename
+                }`
+              : null,
           likes: 0,
           userId: userId,
         })
@@ -77,6 +80,19 @@ exports.getAllPost = (req, res, next) => {
     });
 };
 
+exports.getOnePost = (req, res, next) => {
+  const userId = req.user.userId;
+  const messageId = req.params.id;
+
+  models.Message.findOne({
+    where: { id: messageId },
+  })
+    .then((message) => res.status(201).json(message))
+    .catch((error) =>
+      res.status(404).json({ error: "Aucun poste à afficher" })
+    );
+};
+
 exports.modifyPost = (req, res, next) => {
   const userId = req.user.userId;
   const messageId = req.params.id;
@@ -90,7 +106,6 @@ exports.modifyPost = (req, res, next) => {
   })
     .then((messages) => {
       console.log(messages);
-      
 
       if (messages.userId === userId || isAdmin === true) {
         if (messages.image !== null) {
@@ -102,7 +117,7 @@ exports.modifyPost = (req, res, next) => {
                 content: content ? content : content.title,
                 image: `${req.protocol}://${req.get("host")}/images/${
                   req.file.filename
-                }`
+                }`,
               })
               .then(() =>
                 res.status(200).json({ message: "Post mis à jour !" })
@@ -129,7 +144,9 @@ exports.modifyPost = (req, res, next) => {
         return res.status(409).json({ error: "Mis à jour impossible" });
       }
     })
-    .catch((error) => res.status(500).json({ error : "Vérification impossible"}));
+    .catch((error) =>
+      res.status(500).json({ error: "Vérification impossible" })
+    );
 };
 
 exports.deletePost = (req, res, next) => {
@@ -180,9 +197,8 @@ exports.deletePost = (req, res, next) => {
 // Middleware Like
 
 exports.likePost = (req, res, next) => {
-
-const userId = req.user.userId;
-const messageId = req.params.id;
+  const userId = req.user.userId;
+  const messageId = req.params.id;
 
   models.Message.findOne({
     where: { id: messageId },
