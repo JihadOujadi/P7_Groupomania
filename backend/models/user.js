@@ -1,7 +1,5 @@
-'use strict';
-const {
-  Model
-} = require('sequelize');
+"use strict";
+const { Model } = require("sequelize");
 module.exports = (sequelize, DataTypes) => {
   class User extends Model {
     /**
@@ -9,31 +7,36 @@ module.exports = (sequelize, DataTypes) => {
      * This method is not a part of Sequelize lifecycle.
      * The `models/index` file will call this method automatically.
      */
-    static associate({Message, Comment, Like}) {
+    static associate(models) {
       // define association here
-      this.hasMany(Message, { foreignKey: {
-        name: "userId",
-        allowNull: false
-      }});
-      this.hasMany(Comment, { foreignKey: {
-        name: "userId",
-        allowNull: false
-      }});
-      // this.hasMany(Like, { foreignKey: 'userId', as: 'likes' })
+      models.User.hasMany(models.Message, {
+        foreignKey: {
+          name: "userId",
+          allowNull: false,
+        },
+      });
+      models.User.hasMany(models.Comment, {
+        foreignKey: {
+          name: "userId",
+          allowNull: false,
+        },
+      });
+      models.User.hasMany(models.Like, { foreignKey: "userId", as: "likes" });
     }
-    
   }
-  User.init({
-    firstname: DataTypes.STRING,
-    lastname: DataTypes.STRING,
-    email: DataTypes.STRING,
-    password: DataTypes.STRING,
-    pictures: {type: DataTypes.STRING,
-    defaultValue: ''},
-    isAdmin: DataTypes.BOOLEAN
-  }, {
-    sequelize,
-    modelName: 'User',
-  });
+  User.init(
+    {
+      firstname: DataTypes.STRING,
+      lastname: DataTypes.STRING,
+      email: DataTypes.STRING,
+      password: DataTypes.STRING,
+      pictures: { type: DataTypes.STRING, defaultValue: "" },
+      isAdmin: DataTypes.BOOLEAN,
+    },
+    {
+      sequelize,
+      modelName: "User",
+    }
+  );
   return User;
 };

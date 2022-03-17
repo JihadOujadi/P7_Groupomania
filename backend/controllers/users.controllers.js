@@ -165,7 +165,7 @@ exports.updateProfile = (req, res, next) => {
       user
         .update(editUser)
         .then((user) => {
-          if (user) return res.status(201).json(user);
+          if (user) return res.status(201).json(editUser);
           else
             return res
               .status(500)

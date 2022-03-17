@@ -1,8 +1,10 @@
 const models = require("../models");
 const jwt = require("../middlewares/auth");
 const fs = require("fs");
-const user = require("../models/user");
 require("dotenv").config({ path: "./config/.env" });
+
+
+// Middleware Posts
 
 exports.createPost = (req, res, next) => {
   const userId = req.user.userId;
@@ -54,7 +56,10 @@ exports.getAllPost = (req, res, next) => {
     attributes: fields !== "*" && fields != null ? fields.split(",") : null,
     limit: !isNaN(limit) ? limit : null,
     offset: !isNaN(offset) ? offset : null,
-    include: "user",
+    include: {
+      model: models.User,
+      attributes: ["firstname", "lastname"]
+    },
   })
     .then((messages) => {
       console.log(messages);
@@ -106,27 +111,54 @@ exports.modifyPost = (req, res, next) => {
 
 exports.deletePost = (req, res, next) => {
   const userId = req.user.userId;
-
   const messageId = req.params.id;
 
   models.Message.findOne({
-    atributes: ["id"],
-    where: { id: userId },
+    where: { id: messageId },
   })
-    .then((messages) => {
-      if (messages) {
-        messages
-          .destroy()
-          .then(() => res.status(200).json({ message: "Post supprimé !" }))
-          .catch((error) => res.status(400).json({ error }));
-      } else {
-        return res.status(404).json({ error: "Suppression impossible" });
+    .then((message) => {
+      if (message.userId === userId || isAdmin === true) {
+        if (message.image !== null) {
+          const filename = message.image.split("/images/")[1];
+          fs.unlink(`images/${filename}`, () => {
+            message
+              .destroy()
+              .then(() =>
+                res.status(200).json({ message: "Message supprimé !" })
+              )
+              .catch((error) => res.status(400).json({ error : "Suppression impossible" }));
+          });
+        } else {
+          message
+            .destroy()
+            .then(() => {
+              res.status(200).json({
+                message: "Message supprimé !",
+              });
+            })
+            .catch((error) => {
+              res.status(400).json({
+                error: error,
+                message: "Le message ne peux pas être supprimé",
+              });
+            });
+        }
       }
     })
-    .catch((error) => res.status(500).json({ error: error }));
+    .catch((error) => {
+      res.status(400).json({
+        error: "Vérification impossible",
+      });
+    });
 };
 
-exports.likePost = (req, res, next) => {};
+// Middleware Like
+
+exports.likePost = (req, res, next) => {
+
+};
+
+// Middleware Commentaire 
 
 exports.addComment = (req, res, next) => {
   const userId = req.user.userId;
@@ -137,71 +169,77 @@ exports.addComment = (req, res, next) => {
     where: { id: messageId }
   })
     .then((message) => {
-      if (message) {
-        console.log(message);
-        let newComment = models.Comment.create({
-          content: content,
-          UserId: userId
-        })
-          .then((newComment) => {
-            return res.status(201).json({
-              message: "Commentaire publié",
-              body: newComment
-            });
-          })
-          .catch((error) =>
-            res
-              .status(404)
-              .json({ error: "Impossible de publier le commentaire" })
-          );
-      } else {
-        res.status(404).json({ error: "Utilisateur non trouvé" });
-      }
+
+      let newComment = models.Comment.create({
+        userId: userId,
+        messageId: messageId,
+        content: content,
+      })
+        .then((newComment) => res.status(201).json({ message: "Commentaire enregistré !", body: newComment }))
+        .catch((error) => res.status(500).json(error));
     })
+    
     .catch((error) => res.status(500).json({ error: "  " }));
 };
 
-exports.deleteComment = (req, res, next) => {
-const userId = req.user.userId;
-const messageId = req.params.id;
-const content = req.body.content;
-
-models.User.findOne({
-  where: { id: userId },
-})
-  .then((message) => {
-    if (user.id) {
-      console.log(message);
-      Comment.destroy()
-        .then((newComment) => {
-          return res.status(201).json({
-            message: "Commentaire publié",
-            body: newComment,
-          });
-        })
-        .catch((error) =>
-          res
-            .status(404)
-            .json({ error: "Impossible de publier le commentaire" })
-        );
-    } else {
-      res.status(404).json({ error: "Utilisateur non trouvé" });
-    }
-  })
-  .catch((error) => res.status(500).json({ error: "  " }));
-
-};
 
 exports.getComment = (req,res,next) => {
-  const postId = req.params.Id;
 
-  models.Comment.findByPk({
-    order: ["updateAt", "ASC"],
-    where: {id: postId}
+  const messageId = req.params.id;
+  const fields = req.body.fields;
+  const order = req.body.order;
+
+
+  models.Comment.findAll({
+    order: [order != null ? order.split(":") : ["content", "ASC"]],
+    attributes: fields !== "*" && fields != null ? fields.split(",") : null,
+    include: {
+      model: models.User,
+      attributes: ["firstname", "lastname"]
+    },
+    where: {messageId: messageId}
   })
-  .then((comment) => {
-    return res.status(200).json(comment)
-  })
-  .catch((error) => res.status(500).json({error : "Vérification impossible"}));
-  
+    .then((comments) => {
+      console.log(comments);
+      if (comments) {
+        res.status(200).json(comments);
+      } else {
+        res.status(404).json({ error: "Aucun commentaire trouvé" });
+      }
+    })
+    .catch((error) => {
+      console.log(error);
+      res.status(500).json({ error: "Champs invalides" });
+    });
 };
+
+exports.deleteComment = (req,res,next) =>{
+  const userId = req.user.userId;
+  const messageId = req.params.messageId;
+  const contentId = req.params.id;
+
+  models.Comment.findOne({
+    where: { messageId: messageId ,id: contentId},
+  })
+    .then((comment) => {
+      if (comment.userId === userId || isAdmin === true) {
+          comment
+            .destroy()
+            .then(() => {
+              res.status(201).json({
+                message: "Commentaire supprimé !",
+              });
+            })
+            .catch((error) => {
+              res.status(404).json({
+                error: "Le commentaire n'a pas pu être supprimé"
+              });
+            });
+      }
+    })
+    .catch((error) => {
+      res.status(500).json({
+        error: "Vérification impossible",
+      });
+    });
+}
