@@ -1,5 +1,8 @@
 <template>
+<main>
+
   <img src="@/assets/groupomania-logo.png" alt="Groupomania" class="logo" />
+
   <div class="card">
     <h1>Connexion</h1>
     <p>Vous n'êtes pas encore inscrit ? <span>S'inscrire</span></p>
@@ -72,7 +75,7 @@
       </div> -->
     </form>
   </div>
-
+  </main>
   <RouterView />
 </template>
 
@@ -80,10 +83,16 @@
 @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;800&display=swap");
 @import "@/assets/base.css";
 
+main{
+  display:flex;
+  flex-direction: column;
+  justify-content: center; 
+  align-items: center
+}
 .logo {
-  width: 50%;
+  width: 250px;
   padding: 0;
-  margin-left: 120px;
+  margin-left: 20px;
   margin-bottom: 50px;
 }
 .form-row {
@@ -93,7 +102,7 @@
   gap: 5px;
 }
 .form-row__input {
-  padding: 8px;
+  padding: 13px;
   border: none;
   border-radius: 8px;
   background: #f2f2f2;
@@ -103,27 +112,5 @@
   min-width: 100px;
   color: black;
 }
-.bouton {
-  background: #2196f3;
-  border-radius: 10px;
-  width: 100%;
-  padding: 15px;
-  color: #fff;
-  border: none
-}
-.bouton:hover{
-  background: #56BBF1;
-}
-.bouton--disabled {
-  background: #cecece;
-  color: #ececec;
-}
-.bouton--disabled{
-  background: #cecece;
-  color: #cecece;
-}
-.bouton--disabled:hover{
-  cursor: not-allowed;
-  background: #cecece;
-}
+
 </style>

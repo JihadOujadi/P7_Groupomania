@@ -18,14 +18,12 @@ import { RouterLink, RouterView } from "vue-router";
 }
 
 #app {
-  max-width: 100%;
+  width: 100%;
 }
 
 body {
-  display: flex;
-  align-items: center;
-  justify-content: center;
   min-height: 100vh;
+  padding: 25px;
 }
 .card {
   display: flex;
@@ -36,5 +34,28 @@ body {
   background: white;
   border-radius: 16px;
   padding: 40px;
+}
+.bouton {
+  background: #2196f3;
+  border-radius: 10px;
+  width: 100%;
+  padding: 15px;
+  color: #fff;
+  border: none
+}
+.bouton:hover{
+  background: #56BBF1;
+}
+.bouton--disabled {
+  background: #cecece;
+  color: #ececec;
+}
+.bouton--disabled{
+  background: #cecece;
+  color: #cecece;
+}
+.bouton--disabled:hover{
+  cursor: not-allowed;
+  background: #cecece;
 }
 </style>
