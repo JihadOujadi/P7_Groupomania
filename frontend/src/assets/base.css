@@ -36,7 +36,7 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --color-background: linear-gradient(#DFF6FF, #2685BF) ;
+    --color-background: linear-gradient(#2685BF,#fff) ;
     --color-background-soft: var(--vt-c-black-soft);
     --color-background-mute: var(--vt-c-black-mute);
 
@@ -51,7 +51,7 @@
 
 body {
   color: var(--color-title-text);
-  background: var(--color-background);
+  /* background: var(--color-background); */
   transition: color 0.5s, background-color 0.5s;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;

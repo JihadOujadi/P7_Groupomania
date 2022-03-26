@@ -20,6 +20,11 @@ const router = createRouter({
       name: "profil",
       component: () => import("../views/Profil.vue"),
     },
+    {
+      path: "/post",
+      name: "post",
+      component: () => import("../views/Post.vue"),
+    },
   ],
 });
 router.beforeEach((to, from) => {

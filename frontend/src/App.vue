@@ -20,42 +20,46 @@ import { RouterLink, RouterView } from "vue-router";
 #app {
   width: 100%;
 }
-
 body {
   min-height: 100vh;
-  padding: 25px;
+  padding: 0;
+  margin: 0;
+  background: #f8f8f8; 
 }
-.card {
+header {
   display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  max-width: 100%;
-  width: 550px;
-  background: white;
-  border-radius: 16px;
-  padding: 40px;
+  justify-content: space-between;
+  padding: 30px 50px;
+  width: 100%;
+  margin-bottom: 100px;
+  border-bottom: 2px solid #D1D1D1;
+  background: #F5F5F5
 }
 .bouton {
-  background: #2196f3;
   border-radius: 10px;
+  background: #fff;
+  color: #C84B31;
   width: 100%;
   padding: 15px;
-  color: #fff;
-  border: none
+  font-size: 15px;
+  border: 2px solid #C84B31;
+  transition: .2s ease-in-out;
 }
 .bouton:hover{
-  background: #56BBF1;
+  background: #C84B31;
+  color: #fff;
+  border: 2px solid #C84B31;
+  cursor: pointer
 }
 .bouton--disabled {
   background: #cecece;
+  border: 2px solid #ececec;
   color: #ececec;
-}
-.bouton--disabled{
-  background: #cecece;
-  color: #cecece;
 }
 .bouton--disabled:hover{
   cursor: not-allowed;
   background: #cecece;
+  color: #ececec;
+  border: 2px solid #ececec;
 }
 </style>

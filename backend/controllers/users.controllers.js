@@ -64,7 +64,7 @@ exports.signup = (req, res, next) => {
             .then((user) => {
               return res.status(201).json({
                 userId: user.id,
-                message: "Utilisateur créé",
+                message: "Utilisateur créé avec succès",
               });
             })
             .catch((error) =>
@@ -92,7 +92,7 @@ exports.login = (req, res, next) => {
   models.User.findOne({ where: { email: email } })
     .then((user) => {
       if (!user) {
-        return res.status(401).json({ error: "Utilisateur non trouvé" });
+        return res.status(401).json({ error: "Adresse mail et/ou mot de passe invalide" });
       }
       console.log(user);
       bcrypt
