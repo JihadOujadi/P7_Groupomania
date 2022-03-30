@@ -18,6 +18,7 @@
                   type="file"
                   name="image"
                   class="input__file"
+                  accept=".jpg, .jpeg, .png, .gif"
                   @change="fileUpload"
                 />
               </div>

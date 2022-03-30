@@ -5,50 +5,68 @@
       <h1>Fil d'actualités</h1>
       <section class="post">
         <div class="post--title">
-        <figure class="post--userimg">
-          <img :src="userInfo.image" />
+          <figure class="post--userimg">
+            <img :src="userInfo.image" />
           </figure>
           <h2>Dîtes-nous tout...</h2>
         </div>
         <form enctype="multipart/form-data">
-          <label for="post"></label>
+          <label for="title"></label>
           <input
             type="text"
             placeholder="Votre titre"
-            id="post"
+            id="title"
             class="form-row__input"
+            v-model="title"
           />
-          <label for="post"></label>
-          <input
+          <label for="content"></label>
+          <textarea
             type="text"
-            placeholder="Saissisez votre texte"
-            id="post"
+            id="content"
+            rows="6"
+            cols="33"
             class="form-row__input__content"
-          />
-          <input
-            type="file"
-            name="image"
-            accept=".jpg, .jpeg, .png, .gif"
-          />
-          <div class="button">
-            <button class="bouton bouton__image">Ajouter une photo</button>
-            <button class="bouton bouton__image">Publier</button>
-          </div>
+            placeholder="Saissisez votre texte"
+            v-model="content"
+          >
+          </textarea>
         </form>
+        <div class="form__button">
+          <button class="bouton bouton__image" @click.prevent="newPost">Publier</button>
+          <button class="bouton bouton__image" @click="upload = !upload">
+            Ajouter une photo
+          </button>
+          <div class="form">
+            <transition name="fade">
+              <form enctype="multipart/form-data" v-if="upload">
+                <div class="form--content">
+                  <input
+                    type="file"
+                    ref="file"
+                    class="input__file"
+                    accept=".jpg, .jpeg, .png, .gif"
+                    @change="selectedFile"
+                  />
+                </div>
+              </form>
+            </transition>
+          </div>
+        </div>
       </section>
-
-      <section class="card">
+      <section class="card" v-for="messages in postInfo" :key="messages.id">
         <article>
-          <a href="#">
-            <h2 class="card--title">Titre du post</h2>
-            <p class="card--title__name">Nom Prénom</p>
-            <p class="card--content">Contenu du post</p>
+          <div class="content">
+            <h2 class="card--title">{{ messages.title }}</h2>
+            <p class="card--title__name">
+              {{ messages.User.lastname }} {{ messages.User.firstname }}
+            </p>
+            <p class="card--content">{{ messages.content }}</p>
             <figure>
-              <img src="@/assets/image-test.jpg" />
+              <img :src="messages.image" />
             </figure>
-          </a>
+          </div>
           <div class="card--social">
-            <span>Nombre de likes</span>
+            <span>{{ messages.likes.length }}</span>
             <font-awesome-icon icon="thumbs-up" />
             <span>Nombre de commentaires</span>
             <font-awesome-icon icon="comment" />
@@ -76,6 +94,11 @@ export default {
       token: "",
       userInfo: [],
       postInfo: [],
+      upload: false,
+      title: "",
+      content: "",
+      file: "",
+      likes: "",
     };
   },
   components: {
@@ -95,12 +118,35 @@ export default {
           this.error = error.response.data;
         });
     },
-    postUser() {
+    selectedFile(event) {
+      this.FILE = event.target.files[0];
+    },
+    newPost() {
       let token = localStorage.getItem("token");
+      const formData = new FormData();
+      if (this.FILE == null) {
+        formData.append("title", this.title);
+        formData.append("content", this.content);
+      } else {
+        formData.append("title", this.title);
+        formData.append("content", this.content);
+        formData.append("image", this.FILE, this.FILE.name);
+      }
+
       axios
-        .get("http://localhost:8080/api/users/profile/messages", {
+        .post("http://localhost:8080/api/posts/new", formData, {
           headers: { Authorization: `Bearer ${token}` },
         })
+        .then((response) => {
+          document.location.reload();
+        })
+        .catch((error) => {
+          this.error = error.response.data;
+        });
+    },
+    allPost() {
+      axios
+        .get("http://localhost:8080/api/posts")
         .then((response) => {
           this.postInfo = response.data;
         })
@@ -111,7 +157,7 @@ export default {
   },
   mounted() {
     this.infoProfil();
-    this.postUser();
+    this.allPost();
   },
 };
 </script>
@@ -125,6 +171,7 @@ main {
 .navbar ul {
   display: flex;
   gap: 30px;
+  align-items: center;
 }
 a {
   text-decoration: none;
@@ -140,6 +187,8 @@ li {
 .home {
   display: flex;
   flex-direction: column;
+  max-width: 700px;
+  width: 100%;
 }
 .home h1 {
   margin-bottom: 100px;
@@ -147,14 +196,10 @@ li {
 article h2 {
   margin-bottom: 10px;
 }
-article .content {
-  margin-bottom: 20px;
-}
 .post {
   display: flex;
   flex-direction: column;
   border: 2px solid #ececec;
-  max-width: 100%;
   background: white;
   border-radius: 16px;
   margin-bottom: 50px;
@@ -163,8 +208,8 @@ article .content {
 .bouton {
   align-self: center;
 }
-.post--title h2{
-  padding-top: 10px
+.post--title h2 {
+  padding-top: 10px;
 }
 .post--title {
   display: flex;
@@ -175,10 +220,10 @@ article .content {
   width: 120px;
   height: 120px;
   clip-path: ellipse(70% 55%);
-  margin-left: 10px
+  margin-left: 10px;
 }
-.post--userimg img{
-  width: 100%
+.post--userimg img {
+  width: 100%;
 }
 form {
   width: 100%;
@@ -192,15 +237,16 @@ form {
 }
 .form-row__input__content {
   width: 100%;
-  padding: 60px;
+  padding: 10px;
   border: 1px solid #efefef;
   margin-bottom: 15px;
 }
-.button {
+.form {
   display: flex;
   justify-content: flex-end;
   padding: 10px;
   gap: 10px;
+  width: 100px;
 }
 .bouton {
   margin-top: 20px;
@@ -212,6 +258,16 @@ form {
   font-size: 13px;
   padding: 10px;
 }
+.form__button {
+  display: flex;
+  flex-direction: row-reverse;
+  gap: 10px;
+  margin-bottom: 5px;
+  margin-right: 5px;
+}
+.input--file {
+  color: #c84b31;
+}
 .card--title {
   margin-bottom: 0;
 }
@@ -220,22 +276,36 @@ form {
   margin-left: 20px;
 }
 .card--title__name {
-  margin-bottom: 20px;
+  margin-bottom: 10px;
   color: #525252;
 }
 .card--content {
   margin-left: 20px;
-  margin-bottom: 20px;
+  padding-bottom: 10px;
+}
+figure {
+  max-width: 700px;
 }
 figure img {
   border-radius: 15px;
 }
+img {
+  width: 100%;
+}
 .card--social {
   display: flex;
   gap: 10px;
-  padding: 15px 20px;
+  align-items: center;
 }
 .card {
-  margin-bottom: 25px;
+  margin-bottom: 40px;
+}
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.5s;
+}
+.fade-enter,
+.fade-leave-to {
+  opacity: 0;
 }
 </style>
