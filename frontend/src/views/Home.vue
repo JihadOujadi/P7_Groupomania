@@ -1,144 +1,241 @@
 <template>
   <main>
-    <header>
-      <img src="@/assets/groupomania-logo-inline.png" alt="Groupomania" />
-      <nav class="navbar">
-        <ul class="navbar--list">
-          <li class="navbar--list__element">
-            <a href="#">Profil</a>
-            <li class="navbar--list__element">
-            <a href="#">Déconnexion</a>
-          </li>
-          </li>
-        </ul>
-      </nav>
-    </header>
+    <TheHeader />
     <div class="home">
       <h1>Fil d'actualités</h1>
-    <section class="post">
-    <div class="post--title">
-    <img class="post--userimg" src="@/assets/image-test.jpg">
-<h2>Dîtes-nous tout...</h2>
-</div>
-<label for="post"></label>
-        <input
-          type="text"
-          placeholder="Saissisez votre texte"
-          id="post"
-          class="form-row__input"
-        />
-        <button class="bouton">Ajouter une photo</button>
-    </section>
-    
-    <section class="card">
-      <article>
-        <a href="#">
-          <h2 class="card--title">Titre du post</h2>
-          <p class="card--title__name">Nom Prénom</p>
-          <p class="card--content">Contenu du post</p>
-          <figure>
-            <img src="@/assets/image-test.jpg" />
+      <section class="post">
+        <div class="post--title">
+        <figure class="post--userimg">
+          <img :src="userInfo.image" />
           </figure>
-        </a>
-        <div class="card--social">
-        <span>Nombre de likes</span>
-          <font-awesome-icon icon="thumbs-up" />
-          <span>Nombre de commentaires</span>
-          <font-awesome-icon icon="comment" />
+          <h2>Dîtes-nous tout...</h2>
         </div>
-      </article>
-    </section>
+        <form enctype="multipart/form-data">
+          <label for="post"></label>
+          <input
+            type="text"
+            placeholder="Votre titre"
+            id="post"
+            class="form-row__input"
+          />
+          <label for="post"></label>
+          <input
+            type="text"
+            placeholder="Saissisez votre texte"
+            id="post"
+            class="form-row__input__content"
+          />
+          <input
+            type="file"
+            name="image"
+            accept=".jpg, .jpeg, .png, .gif"
+          />
+          <div class="button">
+            <button class="bouton bouton__image">Ajouter une photo</button>
+            <button class="bouton bouton__image">Publier</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="card">
+        <article>
+          <a href="#">
+            <h2 class="card--title">Titre du post</h2>
+            <p class="card--title__name">Nom Prénom</p>
+            <p class="card--content">Contenu du post</p>
+            <figure>
+              <img src="@/assets/image-test.jpg" />
+            </figure>
+          </a>
+          <div class="card--social">
+            <span>Nombre de likes</span>
+            <font-awesome-icon icon="thumbs-up" />
+            <span>Nombre de commentaires</span>
+            <font-awesome-icon icon="comment" />
+          </div>
+        </article>
+      </section>
     </div>
   </main>
 </template>
 
-<style scoped>
-main{
+<script>
+import axios from "axios";
+import TheHeader from "../components/TheHeader.vue";
+
+export default {
+  name: "Profil",
+  data() {
+    return {
+      mode: "profil",
+      lastname: "",
+      firstname: "",
+      email: "",
+      error: "",
+      user: "",
+      token: "",
+      userInfo: [],
+      postInfo: [],
+    };
+  },
+  components: {
+    TheHeader,
+  },
+  methods: {
+    infoProfil() {
+      let token = localStorage.getItem("token");
+      axios
+        .get("http://localhost:8080/api/users/profile", {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        .then((response) => {
+          this.userInfo = response.data;
+        })
+        .catch((error) => {
+          this.error = error.response.data;
+        });
+    },
+    postUser() {
+      let token = localStorage.getItem("token");
+      axios
+        .get("http://localhost:8080/api/users/profile/messages", {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        .then((response) => {
+          this.postInfo = response.data;
+        })
+        .catch((error) => {
+          this.error = error.response.data;
+        });
+    },
+  },
+  mounted() {
+    this.infoProfil();
+    this.postUser();
+  },
+};
+</script>
+
+<style>
+main {
   display: flex;
   flex-direction: column;
   align-items: center;
 }
-.navbar ul{
+.navbar ul {
   display: flex;
-  gap: 30px
+  gap: 30px;
 }
 a {
   text-decoration: none;
   color: #000;
-  transition: .2s ease-in-out;
+  transition: 0.2s ease-in-out;
 }
-li a:hover{
-  color: #C84B31;
+li a:hover {
+  color: #c84b31;
 }
 li {
   list-style: none;
 }
-.home{
+.home {
   display: flex;
   flex-direction: column;
 }
-.home h1{
+.home h1 {
   margin-bottom: 100px;
 }
-article h2{
+article h2 {
   margin-bottom: 10px;
 }
-article .content{
-margin-bottom: 20px
+article .content {
+  margin-bottom: 20px;
 }
-.post{
+.post {
   display: flex;
   flex-direction: column;
-  border: 2px solid #EFEFEF;
+  border: 2px solid #ececec;
   max-width: 100%;
   background: white;
   border-radius: 16px;
   margin-bottom: 50px;
+  padding-top: 10px;
+}
+.bouton {
+  align-self: center;
+}
+.post--title h2{
   padding-top: 10px
 }
-.bouton{
-align-self: center
-}
-.post--title{
+.post--title {
   display: flex;
   justify-content: flex-start;
-  gap: 40px;
   margin-left: 15px;
 }
-.post--userimg{
-width: 100px;
-clip-path: ellipse(35% 50%);
+.post--userimg {
+  width: 120px;
+  height: 120px;
+  clip-path: ellipse(70% 55%);
+  margin-left: 10px
 }
-.form-row__input{
+.post--userimg img{
+  width: 100%
+}
+form {
   width: 100%;
+}
+.form-row__input {
+  width: 100%;
+  margin-top: 10px;
+  margin-bottom: 10px;
   padding: 20px;
   border: none;
 }
-.bouton{
-  margin-top: 30px;
+.form-row__input__content {
+  width: 100%;
+  padding: 60px;
+  border: 1px solid #efefef;
+  margin-bottom: 15px;
+}
+.button {
+  display: flex;
+  justify-content: flex-end;
+  padding: 10px;
+  gap: 10px;
+}
+.bouton {
+  margin-top: 20px;
   margin-bottom: 5px;
-  width: 30%; 
+  width: 30%;
 }
-.card--title{
-  margin-bottom: 0
+.bouton__image {
+  width: 150px;
+  font-size: 13px;
+  padding: 10px;
 }
-.card--title, .card--title__name{
-margin-left: 20px;
+.card--title {
+  margin-bottom: 0;
 }
-.card--title__name{
-  margin-bottom: 20px;
-  color: #525252
-}
-.card--content{
+.card--title,
+.card--title__name {
   margin-left: 20px;
-  margin-bottom: 20px
 }
-.card--social{
+.card--title__name {
+  margin-bottom: 20px;
+  color: #525252;
+}
+.card--content {
+  margin-left: 20px;
+  margin-bottom: 20px;
+}
+figure img {
+  border-radius: 15px;
+}
+.card--social {
   display: flex;
   gap: 10px;
-  padding: 15px 20px
+  padding: 15px 20px;
 }
-.card{
-  margin-bottom: 25px
+.card {
+  margin-bottom: 25px;
 }
 </style>

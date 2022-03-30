@@ -2,7 +2,7 @@ const express = require("express");
 const mysql = require("mysql");
 const db = require("./db/db");
 const path = require("path");
-const helmet = require("helmet");
+const helmet = require('helmet');
 const rateLimit = require("express-rate-limit");
 const models = require("./models");
 const postsRoutes = require("./routes/post.routes");
@@ -12,7 +12,7 @@ require("dotenv").config({ path: "./config/.env" });
 const app = express();
 app.use(express.json());
 
-app.use(helmet());
+app.use(helmet()); 
 
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,

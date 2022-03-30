@@ -1,6 +1,7 @@
 const models = require("../models");
 const jwt = require("../middlewares/auth");
 const fs = require("fs");
+const message = require("../models/message");
 require("dotenv").config({ path: "./config/.env" });
 
 // Middleware Posts
@@ -87,7 +88,12 @@ exports.getOnePost = (req, res, next) => {
   models.Message.findOne({
     where: { id: messageId },
   })
-    .then((message) => res.status(201).json(message))
+    .then((message) => {
+     `${req.protocol}://${req.get("host")}/images/${
+        message.image
+      }`;
+      res.status(201).json(message)
+    })
     .catch((error) =>
       res.status(404).json({ error: "Aucun poste à afficher" })
     );
@@ -114,7 +120,7 @@ exports.modifyPost = (req, res, next) => {
             messages
               .update({
                 title: title ? title : messages.title,
-                content: content ? content : content.title,
+                content: content ? content : messages.content,
                 image: `${req.protocol}://${req.get("host")}/images/${
                   req.file.filename
                 }`,
@@ -127,19 +133,6 @@ exports.modifyPost = (req, res, next) => {
               );
           });
         }
-
-        // messages
-        //   .update({
-        //     title: title ? title : messages.title,
-        //     content: content ? content : messages.content,
-        //   })
-        //   .then((user) => {
-        //     return res.status(201).json({
-        //       userId: user.id,
-        //       message: "Post mis à jour",
-        //     });
-        //   })
-        //   .catch((error) => res.status(500).json({ error }));
       } else {
         return res.status(409).json({ error: "Mis à jour impossible" });
       }

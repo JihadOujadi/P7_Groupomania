@@ -64,6 +64,7 @@
         >
           <span>S'enregistrer</span>
         </button>
+        <!-- <span v-if="response.statusText == 'Create'" class="success">Compte créé avec succés. Vous pouvez vous connecter</span> -->
         <span v-if="mode == 'create'" class="error"> {{ error.error }}</span>
       </div>
     </div>
@@ -125,9 +126,8 @@ export default {
       await axios
         .post("http://localhost:8080/api/users/login", data)
         .then((response) => {
-          console.log(response);
           localStorage.setItem("user", response.data.userId);
-          localStorage.setItem("token", JSON.stringify(response.data.token));
+          localStorage.setItem("token", response.data.token);
           this.$router.push("/");
         })
         .catch((error) => {
@@ -146,8 +146,8 @@ export default {
       await axios
         .post("http://localhost:8080/api/users/signup", data)
         .then((response) => {
-          localStorage.setItem("user", JSON.stringify(response.data.userId));
-          localStorage.setItem("token", JSON.stringify(response.data.token));
+          localStorage.setItem("user", response.data.userId);
+          localStorage.setItem("token", response.data.token);
           this.$router.push("/");
         })
         .catch((error) => {
@@ -212,5 +212,8 @@ p {
 }
 .error {
   color: #fd2c03;
+}
+.success {
+  color: #6bcb77;
 }
 </style>

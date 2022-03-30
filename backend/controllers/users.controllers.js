@@ -92,7 +92,9 @@ exports.login = (req, res, next) => {
   models.User.findOne({ where: { email: email } })
     .then((user) => {
       if (!user) {
-        return res.status(401).json({ error: "Adresse mail et/ou mot de passe invalide" });
+        return res
+          .status(401)
+          .json({ error: "Adresse mail et/ou mot de passe invalide" });
       }
       console.log(user);
       bcrypt
@@ -117,7 +119,7 @@ exports.getProfile = (req, res, next) => {
   const userId = req.user.userId;
 
   models.User.findOne({
-    attributes: ["firstname", "lastname", "email"],
+    attributes: ["firstname", "lastname", "email", "image"],
     where: { id: userId },
   })
     .then((user) => {
@@ -132,44 +134,48 @@ exports.getProfile = (req, res, next) => {
     );
 };
 
+//Affichage des posts
+exports.getUserMessage = (req, res, next) => {
+  const userId = req.user.userId;
+
+  models.Message.findAll({
+    attributes: ["id", "title", "content", "image"],
+    where: { userId: userId },
+  })
+    .then((messages) => {
+      if (messages) {
+        messages.image = `${req.protocol}://${req.get("host")}/images/${
+          messages.image
+        }`;
+        res.status(200).json(messages);
+      } else {
+        res.status(404).json({ error: " Aucun message" });
+      }
+    })
+    .catch((error) => {
+      res.status(400).json({
+        error: error,
+      });
+    });
+};
+
 // Mise à jour du profil
 exports.updateProfile = (req, res, next) => {
   const userId = req.user.userId;
-
-  if (req.files) {
-    models.User.findOne({ where: { id: userId } })
-      .then((user) => {
-        if (req.files.pictures) {
-          const pictures = user.pictures.split("/images/")[1];
-          if (pictures != undefined) {
-            fs.unlink(`images/${pictures}`, (error) => {
-              if (error) res.status(400).json({ error });
-            });
-          }
-        }
-      })
-      .catch((error) => res.status(400).json({ error }));
-  }
-
-  const editUser = req.files
-    ? {
-        ...JSON.parse(req.body.user),
-        pictures: req.files.pictures
-          ? `${req.protocol}://${req.get("host")}/images/${
-              req.files.pictures[0].filename
-            }`
-          : req.body.pictures,
-      }
-    : { ...req.body };
+  const lastname = req.body.lastname;
+  const firstname = req.body.firstname;
 
   models.User.findOne({
     where: { id: userId },
   })
     .then((user) => {
       user
-        .update(editUser)
+        .update({
+          lastname: lastname,
+          firstname: firstname,
+        })
         .then((user) => {
-          if (user) return res.status(201).json(editUser);
+          if (user) return res.status(201).json(user);
           else
             return res
               .status(500)
@@ -247,4 +253,30 @@ exports.updatePassword = (req, res, next) => {
     .catch((error) =>
       res.status(500).json({ error: "Vérification impossible" })
     );
+};
+
+exports.uploadImage = (req, res, next) => {
+  const userId = req.user.userId;
+
+  models.User.findOne({
+    where: { id: userId },
+  })
+    .then((user) => {
+      user.update(
+          {
+            image: `${req.protocol}://${req.get("host")}/images/${
+              req.file.filename
+            }`,
+          },
+          { where: { id: userId } }
+        )
+    
+        .then(() => res.status(200).json(user = [user.lastname, user.firstname, user.image]))
+        .catch((error) =>
+          res.status(400).json({ error: "Mise à jour impossible" })
+        );
+    })
+    .catch((error) => {
+      res.status(500).json({ error: "Vérification impossible" });
+    });
 };

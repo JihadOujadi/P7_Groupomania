@@ -8,7 +8,7 @@ const router = createRouter({
       path: "/",
       name: "home",
       component: Home,
-      // meta: { requiresAuth: true }
+      meta: { requiresAuth: true }
     },
     {
       path: "/login",
@@ -30,7 +30,7 @@ const router = createRouter({
 router.beforeEach((to, from) => {
   // instead of having to check every route record with
   // to.matched.some(record => record.meta.requiresAuth)
-  if (to.meta.requiresAuth) {
+  if (to.meta.requiresAuth && localStorage.getItem("token") === null) {
     // this route requires auth, check if logged in
     // if not, redirect to login page.
     return {
