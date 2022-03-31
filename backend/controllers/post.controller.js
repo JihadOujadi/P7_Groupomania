@@ -87,12 +87,14 @@ exports.getOnePost = (req, res, next) => {
 
   models.Message.findOne({
     where: { id: messageId },
+    include: {
+      model: models.User,
+      attributes: ["firstname", "lastname"],
+    },
   })
     .then((message) => {
-     `${req.protocol}://${req.get("host")}/images/${
-        message.image
-      }`;
-      res.status(201).json(message)
+      `${req.protocol}://${req.get("host")}/images/${message.image}`;
+      res.status(201).json(message);
     })
     .catch((error) =>
       res.status(404).json({ error: "Aucun poste à afficher" })
@@ -277,7 +279,7 @@ exports.likePost = (req, res, next) => {
 exports.addComment = (req, res, next) => {
   const userId = req.user.userId;
   const messageId = req.params.id;
-  const content = req.body.content;
+  const comment = req.body.comment;
 
   models.Message.findOne({
     where: { id: messageId },
@@ -286,7 +288,7 @@ exports.addComment = (req, res, next) => {
       let newComment = models.Comment.create({
         userId: userId,
         messageId: messageId,
-        content: content,
+        comment: comment,
       })
         .then((newComment) =>
           res
@@ -305,7 +307,7 @@ exports.getComment = (req, res, next) => {
   const order = req.body.order;
 
   models.Comment.findAll({
-    order: [order != null ? order.split(":") : ["content", "ASC"]],
+    order: [order != null ? order.split(":") : ["comment", "ASC"]],
     attributes: fields !== "*" && fields != null ? fields.split(",") : null,
     include: {
       model: models.User,

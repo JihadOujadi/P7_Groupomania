@@ -55,22 +55,24 @@
       </section>
       <section class="card" v-for="messages in postInfo" :key="messages.id">
         <article>
-          <div class="content">
-            <h2 class="card--title">{{ messages.title }}</h2>
-            <p class="card--title__name">
-              {{ messages.User.lastname }} {{ messages.User.firstname }}
-            </p>
-            <p class="card--content">{{ messages.content }}</p>
-            <figure>
-              <img :src="messages.image" />
-            </figure>
-          </div>
-          <div class="card--social">
-            <span>{{ messages.likes.length }}</span>
-            <font-awesome-icon icon="thumbs-up" />
-            <span>Nombre de commentaires</span>
-            <font-awesome-icon icon="comment" />
-          </div>
+          <a :href="'/post/' + messages.id">
+            <div class="content">
+              <h2 class="card--title">{{ messages.title }}</h2>
+              <p class="card--title__name">
+                {{ messages.User.lastname }} {{ messages.User.firstname }}
+              </p>
+              <p class="card--content">{{ messages.content }}</p>
+              <figure>
+                <img :src="messages.image" />
+              </figure>
+            </div>
+            <div class="card--social">
+              <span>{{ messages.likes.length }}</span>
+              <font-awesome-icon icon="thumbs-up" />
+              <span>Nombre de commentaires</span>
+              <font-awesome-icon icon="comment" />
+            </div>
+          </a>
         </article>
       </section>
     </div>
@@ -148,6 +150,7 @@ export default {
       axios
         .get("http://localhost:8080/api/posts")
         .then((response) => {
+          console.log(response.data);
           this.postInfo = response.data;
         })
         .catch((error) => {

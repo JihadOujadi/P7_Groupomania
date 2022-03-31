@@ -27,7 +27,7 @@ module.exports = (sequelize, DataTypes) => {
     {
       userId: DataTypes.STRING,
       messageId: DataTypes.STRING,
-      content: DataTypes.STRING,
+      comment: DataTypes.STRING,
     },
     {
       sequelize,

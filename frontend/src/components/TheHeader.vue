@@ -65,7 +65,8 @@ export default {
   justify-content: flex-end;
 }
 .user-pic {
-  width: 5%;
+  width: 35px;
   margin-right: 10px;
+  clip-path: ellipse(70% 55%);
 }
 </style>

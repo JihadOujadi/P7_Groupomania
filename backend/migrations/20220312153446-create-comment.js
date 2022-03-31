@@ -16,7 +16,7 @@ module.exports = {
         allowNull: false,
         type: Sequelize.INTEGER
       },
-      content: {
+      comment: {
         type: Sequelize.STRING
       },
       createdAt: {

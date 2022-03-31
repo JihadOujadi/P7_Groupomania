@@ -4,13 +4,12 @@
     <div class="home">
       <section class="card">
         <article>
-          <a href="#">
-            <h2>Nom du user</h2>
-            <p class="content">Contenu du post</p>
-            <figure>
-              <img src="@/assets/image-test.jpg" />
-            </figure>
-          </a>
+          <h2 class="card--title">{{ postInfo.title }}</h2>
+          <p class="card--title__name">{{ user.lastname }} {{ user.firstname }}</p>
+          <p class="card--content">{{ postInfo.content }}</p>
+          <figure>
+            <img :src="postInfo.image" />
+          </figure>
           <div class="card--social">
             <span>Nombre de likes</span>
             <font-awesome-icon icon="thumbs-up" />
@@ -29,6 +28,13 @@
             >
             </textarea>
           </div>
+          <div
+            class="card--content"
+            v-for="userComment in comments"
+            :key="userComment.id"
+          >
+            {{ userComment.comment }}
+          </div>
         </article>
       </section>
     </div>
@@ -39,6 +45,10 @@
 import axios from "axios";
 import TheHeader from "../components/TheHeader.vue";
 
+const paramsId = new URLSearchParams(location.search);
+
+const id = paramsId.get("id");
+
 export default {
   name: "Post",
   data() {
@@ -47,13 +57,50 @@ export default {
       title: "",
       content: "",
       image: "",
-      messageId: "",
+      lastname: "",
+      firstname: "",
+      token: "",
+      user: "",
+      id: this.$route.params.id,
+      comment: "",
+      comments: [],
+      postInfo: [],
     };
   },
   components: {
     TheHeader,
   },
-  methods: {},
+  methods: {
+    onePost() {
+      let token = localStorage.getItem("token");
+      axios
+        .get("http://localhost:8080/api/posts/" + this.id, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        .then((response) => {
+          this.postInfo = response.data;
+          this.user = response.data.User;
+        })
+        .catch((error) => {
+          this.error = error.response.data;
+        });
+    },
+    getComment() {
+      let token = localStorage.getItem("token");
+      axios
+        .get("http://localhost:8080/api/posts/comment/" + this.id, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        .then((response) => {
+          console.log(response.data);
+          this.comments = response.data;
+        });
+    },
+  },
+  mounted() {
+    this.onePost();
+    this.getComment();
+  },
 };
 </script>
 
