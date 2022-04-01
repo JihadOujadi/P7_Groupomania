@@ -13,8 +13,8 @@ router.get('/', multer, postsControl.getAllPost);
 router.get('/:id', auth.getUser, postsControl.getOnePost);
 router.put('/:id', auth.getUser, multer, postsControl.modifyPost);
 router.delete('/:id', auth.getUser, multer, postsControl.deletePost);
-router.post('/comment/:id', auth.getUser, postsControl.addComment);
-router.get('/comment/:id', postsControl.getComment);
+router.post('/:id/comment', auth.getUser, postsControl.addComment);
+router.get('/:id/comment', postsControl.getComment);
 router.delete('/:messageId/comment/:id', auth.getUser, postsControl.deleteComment);
 router.post('/:id/like', auth.getUser, postsControl.likePost);
 

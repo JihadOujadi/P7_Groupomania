@@ -6,7 +6,9 @@
     <nav class="navbar">
       <ul class="navbar--list">
         <li class="navbar--list__element">
-          <img :src="userInfo.image" alt="user-pic" class="user-pic" />
+          <span class="user-pic picture picture-content">
+            <img :src="userInfo.image" alt="user-pic" class="user-pic__img" />
+          </span>
           <p>
             <strong> {{ userInfo.firstname }} </strong>
           </p>
@@ -58,15 +60,48 @@ export default {
 };
 </script>
 
-<style>
+<style scoped>
+.navbar ul {
+  display: flex;
+  gap: 30px;
+  align-items: center;
+}
+a {
+  text-decoration: none;
+  color: #000;
+  transition: 0.2s ease-in-out;
+}
+li a:hover {
+  color: #c84b31;
+}
+li {
+  list-style: none;
+}
+
 .navbar--list__element {
   display: flex;
   align-items: center;
   justify-content: flex-end;
 }
-.user-pic {
-  width: 35px;
+.picture {
+  width: 40px;
+  height: 39px;
+}
+.picture-content {
+  padding: 0;
   margin-right: 10px;
-  clip-path: ellipse(70% 55%);
+}
+.user-pic {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 50%;
+  overflow: hidden;
+}
+.user-pic__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 </style>

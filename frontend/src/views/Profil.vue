@@ -5,14 +5,18 @@
       <section class="card--info">
         <article>
           <h1>Votre profil</h1>
-          <figure>
-            <img class="avatar" :src="userInfo.image" />
+          <figure class="user-pic picture picture-content">
+            <img class="user-pic__img" :src="userInfo.image" />
           </figure>
           <button @click="upload = !upload" class="bouton bouton__image">
             Modifier l'image
           </button>
           <transition name="fade">
-            <form enctype="multipart/form-data" @submit.prevent="updateImage" v-if="upload">
+            <form
+              enctype="multipart/form-data"
+              @submit.prevent="updateImage"
+              v-if="upload"
+            >
               <div class="form">
                 <input
                   type="file"
@@ -46,11 +50,7 @@
       </section>
       <hr />
       <section class="card--post">
-        <div
-          v-for="messages in postInfo"
-          :key="messages.id"
-          class="card--post__element"
-        >
+        <div v-for="messages in postInfo" :key="messages.id" class="card--post__element">
           <a href="#">
             <img :src="messages.image" />
           </a>
@@ -136,7 +136,7 @@ export default {
       let token = localStorage.getItem("token");
       const formData = new FormData();
 
-      formData.append('image', this.FILE, this.FILE.name);
+      formData.append("image", this.FILE, this.FILE.name);
 
       axios
         .post("http://localhost:8080/api/users/upload", formData, {
@@ -193,25 +193,37 @@ article {
   width: 300px;
   display: flex;
   flex-direction: column;
+  align-items: center;
   padding-right: 60px;
 }
 article > h1 {
   margin-bottom: 20px;
   align-self: center;
 }
-figure {
-  align-self: center;
-  width: 120px;
-  height: 120px;
-  clip-path: ellipse(70% 55%);
+.picture {
+  width: 90px;
+  height: 90px;
 }
-.avatar {
+.picture-content {
+  padding: 0;
+}
+.user-pic {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 50%;
+  overflow: hidden;
+}
+.user-pic__img {
   width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 .bouton__image {
   font-size: 13px;
   width: 150px;
-  margin-top: 15px;
+  margin-top: 45px;
   padding: 5px;
   align-self: center;
 }

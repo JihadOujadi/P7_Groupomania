@@ -5,8 +5,8 @@
       <h1>Fil d'actualités</h1>
       <section class="post">
         <div class="post--title">
-          <figure class="post--userimg">
-            <img :src="userInfo.image" />
+          <figure class="user-pic picture picture-content">
+            <img :src="userInfo.image" class="user-pic__img" />
           </figure>
           <h2>Dîtes-nous tout...</h2>
         </div>
@@ -57,22 +57,20 @@
         <article>
           <a :href="'/post/' + messages.id">
             <div class="content">
-              <h2 class="card--title">{{ messages.title }}</h2>
               <p class="card--title__name">
                 {{ messages.User.lastname }} {{ messages.User.firstname }}
               </p>
+              <h2 class="card--title">{{ messages.title }}</h2>
               <p class="card--content">{{ messages.content }}</p>
               <figure>
                 <img :src="messages.image" />
               </figure>
             </div>
-            <div class="card--social">
-              <span>{{ messages.likes.length }}</span>
-              <font-awesome-icon icon="thumbs-up" />
-              <span>Nombre de commentaires</span>
-              <font-awesome-icon icon="comment" />
-            </div>
           </a>
+          <div class="card--social">
+            <span>{{ messages.likes }} <font-awesome-icon icon="thumbs-up" /></span>
+            <span>{{ comments.length }} <font-awesome-icon icon="comment" /></span>
+          </div>
         </article>
       </section>
     </div>
@@ -96,6 +94,7 @@ export default {
       token: "",
       userInfo: [],
       postInfo: [],
+      comments: [],
       upload: false,
       title: "",
       content: "",
@@ -157,10 +156,22 @@ export default {
           this.error = error.response.data;
         });
     },
+    getComment() {
+      let token = localStorage.getItem("token");
+      axios
+        .get("http://localhost:8080/api/posts/" + this.id + "/comment", {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        .then((response) => {
+          console.log(response.data);
+          this.comments = response.data;
+        });
+    },
   },
   mounted() {
     this.infoProfil();
     this.allPost();
+    this.getComment();
   },
 };
 </script>
@@ -169,11 +180,6 @@ export default {
 main {
   display: flex;
   flex-direction: column;
-  align-items: center;
-}
-.navbar ul {
-  display: flex;
-  gap: 30px;
   align-items: center;
 }
 a {
@@ -199,6 +205,10 @@ li {
 article h2 {
   margin-bottom: 10px;
 }
+article {
+  display: flex;
+  flex-wrap: wrap;
+}
 .post {
   display: flex;
   flex-direction: column;
@@ -207,6 +217,9 @@ article h2 {
   border-radius: 16px;
   margin-bottom: 50px;
   padding-top: 10px;
+}
+textarea {
+  resize: none;
 }
 .bouton {
   align-self: center;
@@ -217,16 +230,29 @@ article h2 {
 .post--title {
   display: flex;
   justify-content: flex-start;
+  align-items: center;
   margin-left: 15px;
 }
-.post--userimg {
-  width: 120px;
-  height: 120px;
-  clip-path: ellipse(70% 55%);
-  margin-left: 10px;
+.picture {
+  width: 40px;
+  height: 40px;
 }
-.post--userimg img {
+.picture-content {
+  padding: 0;
+  margin-right: 10px;
+}
+.user-pic {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 50%;
+  overflow: hidden;
+}
+.user-pic__img {
   width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 form {
   width: 100%;
@@ -310,5 +336,19 @@ img {
 .fade-enter,
 .fade-leave-to {
   opacity: 0;
+}
+.settings {
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 28px;
+}
+.bouton--settings {
+  background: none;
+  cursor: pointer;
+  font-size: 20px;
+  width: 150px;
+  font-size: 13px;
+  padding: 10px;
 }
 </style>
