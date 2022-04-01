@@ -16,7 +16,7 @@
               <font-awesome-icon icon="thumbs-up" />
             </button>
           </div>
-          <div class="update-form">
+          <div class="update-form" v-if="idUser == postInfo.userId">
             <button class="settings" @click="settings = !settings">...</button>
             <div class="bouton--update">
               <button
@@ -134,6 +134,8 @@ export default {
       userInfo: [],
       update: false,
       settings: false,
+      idUser: localStorage.getItem("user"),
+      isAdmin: "",
     };
   },
   components: {
@@ -186,7 +188,9 @@ export default {
         .post("http://localhost:8080/api/posts/" + this.id + "/comment", data, {
           headers: { Authorization: `Bearer ${token}` },
         })
-        .then((response) => {})
+        .then((response) => {
+          document.location.reload();
+        })
         .catch((error) => {
           this.error = error.response.data;
         });
@@ -229,6 +233,7 @@ export default {
           this.error = error.response.data;
         });
     },
+    likePost() {},
   },
   mounted() {
     this.infoProfil();
@@ -247,7 +252,7 @@ export default {
 }
 .picture {
   width: 40px;
-  height: 40px;
+  height: 36px;
 }
 .picture-content {
   padding: 0;
