@@ -21,6 +21,10 @@ module.exports = (sequelize, DataTypes) => {
           allowNull: false,
         },
       });
+      models.Message.hasMany(models.Like, {
+        foreignKey: 'messageId',  
+        allowNull: false,
+    });
     }
   }
   Message.init(
@@ -28,7 +32,7 @@ module.exports = (sequelize, DataTypes) => {
       title: DataTypes.STRING,
       content: DataTypes.STRING,
       image: DataTypes.STRING,
-      likes: { type: DataTypes.INTEGER, defaultValue: 0 },
+      likes: DataTypes.INTEGER,
     },
     {
       sequelize,

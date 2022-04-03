@@ -62,10 +62,11 @@ exports.getAllPost = (req, res, next) => {
     attributes: fields !== "*" && fields != null ? fields.split(",") : null,
     limit: !isNaN(limit) ? limit : null,
     offset: !isNaN(offset) ? offset : null,
-    include: {
-      model: models.User,
-      attributes: ["firstname", "lastname"],
-    },
+    include: [
+      { model: models.User, as: "User", attributes: ["firstname", "lastname"] },
+      { model: models.Like },
+      { model: models.Comment },
+    ],
   })
     .then((messages) => {
       console.log(messages);
@@ -89,6 +90,7 @@ exports.getOnePost = (req, res, next) => {
     where: { id: messageId },
     include: {
       model: models.User,
+      as: "User",
       attributes: ["firstname", "lastname"],
     },
   })
@@ -194,7 +196,7 @@ exports.deletePost = (req, res, next) => {
 exports.likePost = (req, res, next) => {
   const userId = req.user.userId;
   const messageId = req.params.id;
-
+  
   models.Message.findOne({
     where: { id: messageId },
   })
@@ -214,17 +216,11 @@ exports.likePost = (req, res, next) => {
               })
                 .then((userAlreadyLike) => {
                   if (!userAlreadyLike) {
-                    models.Like.create({
-                      userId: userId,
-                      messageId: messageId,
-                    })
-
-                      .then(() => {
+                    messageFound
+                      .addUser(userFound)
+                      .then((userAlreadyLike) => {
                         messageFound
-                          .update(
-                            { like: messageFound.like + 1 },
-                            { where: { id: messageFound.id } }
-                          )
+                          .update({ likes: messageFound.likes + 1 })
                           .then(() =>
                             res.status(200).json({ message: "Post liked" })
                           )
@@ -240,11 +236,11 @@ exports.likePost = (req, res, next) => {
                     })
                       .then(() => {
                         messageFound.update(
-                          { like: messageFound.like - 1 },
+                          { likes: likes - 1 },
                           { where: { id: messageFound.id } }
                         );
-                        if (messageFound.like < 0) {
-                          messageFound.like = 0;
+                        if (messageFound.likes < 0) {
+                          messageFound.likes = 0;
                         }
                       })
                       .then(() => {
@@ -279,7 +275,7 @@ exports.likePost = (req, res, next) => {
 exports.addComment = (req, res, next) => {
   const userId = req.user.userId;
   const messageId = req.params.id;
-  const comment = req.body.comment;
+  const comment = req.body.comment; 
 
   models.Message.findOne({
     where: { id: messageId },

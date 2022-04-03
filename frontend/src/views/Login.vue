@@ -6,15 +6,11 @@
       <h1 v-else>Inscription</h1>
       <p v-if="mode == 'login'">
         Vous n'êtes pas encore inscrit ?
-        <span class="card__action" @click="switchToInscription()"
-          >S'inscrire</span
-        >
+        <span class="card__action" @click="switchToInscription()">S'inscrire</span>
       </p>
       <p v-else>
         Vous avez déjà un compte ?
-        <span class="card__action" @click="switchToConnect()"
-          >Se connecter</span
-        >
+        <span class="card__action" @click="switchToConnect()">Se connecter</span>
       </p>
       <div v-if="mode == 'create'" class="form-row">
         <input
@@ -146,9 +142,8 @@ export default {
       await axios
         .post("http://localhost:8080/api/users/signup", data)
         .then((response) => {
-          localStorage.setItem("user", response.data.userId);
-          localStorage.setItem("token", response.data.token);
-          this.$router.push("/");
+          alert("Votre compte a bien été créé. Vous pouvez vous connecter");
+          document.location.reload();
         })
         .catch((error) => {
           this.error = error.response.data;
@@ -195,7 +190,7 @@ p {
 }
 .form-row {
   display: flex;
-  margin: 16px 0px;
+  margin: 10px 0px;
   gap: 5px;
   flex-wrap: wrap;
 }

@@ -1,7 +1,5 @@
-'use strict';
-const {
-  Model
-} = require('sequelize');
+"use strict";
+const { Model } = require("sequelize");
 module.exports = (sequelize, DataTypes) => {
   class Like extends Model {
     /**
@@ -11,27 +9,49 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       // define association here
+      models.User.belongsToMany(models.Message, {
+        through: models.Like,
+        foreignKey: "userId",
+        otherKey: "messageId"
+      });
+      models.Message.belongsToMany(models.User, {
+        through: models.Like,
+        foreignKey: "messageId",
+        otherKey: "userId"
+      });
       models.Like.belongsTo(models.Message, {
         foreignKey: {
           name: "messageId",
-          allowNull: false
-        }
+          as: "message",
+        },
       });
       models.Like.belongsTo(models.User, {
-        foreignKey: 
-        {
+        foreignKey: {
           name: "userId",
-          allowNull: false
-        }
-      })
+          as: "user",
+        },
+      });
     }
   }
-  Like.init({
-    messageId: DataTypes.INTEGER,
-    userId: DataTypes.INTEGER
-  }, {
-    sequelize,
-    modelName: 'Like',
-  });
+  Like.init(
+    {
+      messageId: {type: DataTypes.INTEGER, 
+      references: {
+        model: "Message",
+        key: "id"
+      }
+    },
+      userId: { type: DataTypes.INTEGER, 
+      references: {
+        model: "User",
+        key: "id"
+      }
+    }
+    },
+    {
+      sequelize,
+      modelName: "Like",
+    }
+  );
   return Like;
 };

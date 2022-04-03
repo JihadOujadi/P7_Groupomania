@@ -32,6 +32,7 @@ module.exports = {
   },
 
   getUser: (req, res, next) => {
+    console.log("dfjsdlkfjmsdlkfjmlsdkfjmlskjf", req.headers.authorization);
     const token = req.headers.authorization.split(" ")[1];
 
     if (token == null) return res.status(401).json({ error: "Token Invalide" });

@@ -40,9 +40,9 @@ export default {
       localStorage.clear();
       this.$router.push("/login");
     },
-    infoProfil() {
+    async infoProfil() {
       let token = localStorage.getItem("token");
-      axios
+      await axios
         .get("http://localhost:8080/api/users/profile", {
           headers: { Authorization: `Bearer ${token}` },
         })

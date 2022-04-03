@@ -7,6 +7,11 @@
           <h1>Votre profil</h1>
           <figure class="user-pic picture picture-content">
             <img class="user-pic__img" :src="userInfo.image" />
+            <img
+              class="user-pic__img"
+              src="@/assets/avatar-default.png"
+              v-if="userInfo.image == null"
+            />
           </figure>
           <button @click="upload = !upload" class="bouton bouton__image">
             Modifier l'image
@@ -32,8 +37,12 @@
         </article>
         <div class="card--info__user">
           <div class="card--info__name">
-            <p>{{ userInfo.lastname }}</p>
-            <p>{{ userInfo.firstname }}</p>
+            <p>
+              <strong>{{ userInfo.lastname }}</strong>
+            </p>
+            <p>
+              <strong>{{ userInfo.firstname }}</strong>
+            </p>
           </div>
           <button @click="show = !show" class="bouton bouton__update">
             Modifier mon profil
@@ -51,8 +60,8 @@
       <hr />
       <section class="card--post">
         <div v-for="messages in postInfo" :key="messages.id" class="card--post__element">
-          <a href="#">
-            <img :src="messages.image" />
+          <a :href="'/post/' + messages.id">
+            <img :src="messages.image" class="card--post__img" />
           </a>
         </div>
       </section>
@@ -88,9 +97,9 @@ export default {
     UpdateProfil,
   },
   methods: {
-    infoProfil() {
+    async infoProfil() {
       let token = localStorage.getItem("token");
-      axios
+      await axios
         .get("http://localhost:8080/api/users/profile", {
           headers: { Authorization: `Bearer ${token}` },
         })
@@ -101,9 +110,9 @@ export default {
           this.error = error.response.data;
         });
     },
-    postUser() {
+    async postUser() {
       let token = localStorage.getItem("token");
-      axios
+      await axios
         .get("http://localhost:8080/api/users/profile/messages", {
           headers: { Authorization: `Bearer ${token}` },
         })
@@ -114,9 +123,9 @@ export default {
           this.error = error.response.data;
         });
     },
-    deleteAccount() {
+    async deleteAccount() {
       let token = localStorage.getItem("token");
-      axios
+      await axios
         .delete("http://localhost:8080/api/users/delete-profile", {
           headers: { Authorization: `Bearer ${token}` },
         })
@@ -132,13 +141,13 @@ export default {
     fileUpload(event) {
       this.FILE = event.target.files[0];
     },
-    updateImage() {
+    async updateImage() {
       let token = localStorage.getItem("token");
       const formData = new FormData();
 
       formData.append("image", this.FILE, this.FILE.name);
 
-      axios
+      await axios
         .post("http://localhost:8080/api/users/upload", formData, {
           headers: { Authorization: `Bearer ${token}` },
         })
@@ -268,6 +277,9 @@ hr {
 }
 .card--post img {
   width: 40%;
+}
+.card--post__img {
+  border-radius: 15px;
 }
 .fade-enter-active,
 .fade-leave-active {

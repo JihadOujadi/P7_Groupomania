@@ -21,7 +21,6 @@ module.exports = (sequelize, DataTypes) => {
           allowNull: false,
         },
       });
-      models.User.hasMany(models.Like, { foreignKey: "userId", as: "likes" });
     }
   }
   User.init(

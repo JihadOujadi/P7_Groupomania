@@ -54,7 +54,7 @@
         </div>
       </section>
       <section class="card" v-for="messages in postInfo" :key="messages.id">
-        <article>
+        <article class="content-post">
           <a :href="'/post/' + messages.id">
             <div class="content">
               <p class="card--title__name">
@@ -63,13 +63,20 @@
               <h2 class="card--title">{{ messages.title }}</h2>
               <p class="card--content">{{ messages.content }}</p>
               <figure>
-                <img :src="messages.image" />
+                <img :src="messages.image" class="content__image" />
               </figure>
             </div>
           </a>
           <div class="card--social">
-            <span>{{ messages.likes }} <font-awesome-icon icon="thumbs-up" /></span>
-            <span>{{ comments.length }} <font-awesome-icon icon="comment" /></span>
+            <span
+              >{{ messages.likes }}
+              <button @click.prevent="likePost">
+                <font-awesome-icon icon="thumbs-up" />
+              </button>
+            </span>
+            <span
+              >{{ messages.Comments.length }} <font-awesome-icon icon="comment"
+            /></span>
           </div>
         </article>
       </section>
@@ -100,15 +107,16 @@ export default {
       content: "",
       file: "",
       likes: "",
+      id: this.$route.params.id,
     };
   },
   components: {
     TheHeader,
   },
   methods: {
-    infoProfil() {
+    async infoProfil() {
       let token = localStorage.getItem("token");
-      axios
+      await axios
         .get("http://localhost:8080/api/users/profile", {
           headers: { Authorization: `Bearer ${token}` },
         })
@@ -122,7 +130,7 @@ export default {
     selectedFile(event) {
       this.FILE = event.target.files[0];
     },
-    newPost() {
+    async newPost() {
       let token = localStorage.getItem("token");
       const formData = new FormData();
       if (this.FILE == null) {
@@ -134,7 +142,7 @@ export default {
         formData.append("image", this.FILE, this.FILE.name);
       }
 
-      axios
+      await axios
         .post("http://localhost:8080/api/posts/new", formData, {
           headers: { Authorization: `Bearer ${token}` },
         })
@@ -145,26 +153,39 @@ export default {
           this.error = error.response.data;
         });
     },
-    allPost() {
-      axios
+    async allPost() {
+      await axios
         .get("http://localhost:8080/api/posts")
         .then((response) => {
           console.log(response.data);
           this.postInfo = response.data;
         })
         .catch((error) => {
+          console.log(response.data);
           this.error = error.response.data;
         });
     },
-    getComment() {
+    async getComment() {
       let token = localStorage.getItem("token");
-      axios
+      await axios
         .get("http://localhost:8080/api/posts/" + this.id + "/comment", {
           headers: { Authorization: `Bearer ${token}` },
         })
         .then((response) => {
           console.log(response.data);
-          this.comments = response.data;
+        });
+    },
+    async likePost() {
+      let token = localStorage.getItem("token");
+      await axios
+        .post("http://localhost:8080/api/posts/" + this.id + "/like", {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+        .then((response) => {
+          console.log(response);
+        })
+        .catch((error) => {
+          this.error = error.response.data;
         });
     },
   },
@@ -172,6 +193,7 @@ export default {
     this.infoProfil();
     this.allPost();
     this.getComment();
+    this.likePost();
   },
 };
 </script>
@@ -205,9 +227,9 @@ li {
 article h2 {
   margin-bottom: 10px;
 }
-article {
+.content-post {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
 }
 .post {
   display: flex;
@@ -320,6 +342,11 @@ figure img {
 }
 img {
   width: 100%;
+}
+.content__image {
+  object-fit: cover;
+  width: 100%;
+  height: 100%;
 }
 .card--social {
   display: flex;

@@ -59,7 +59,7 @@ exports.signup = (req, res, next) => {
             lastname: lastname,
             email: email,
             password: hash,
-            isAdmin: 0,
+            isAdmin: false,
           })
             .then((user) => {
               return res.status(201).json({
@@ -106,6 +106,7 @@ exports.login = (req, res, next) => {
           return res.status(200).json({
             userId: user.id,
             token: jwt.generateTokenForUser(user),
+            admin: user.isAdmin,
           });
         })
         .catch((error) => res.status(500).json({ error }));
@@ -119,7 +120,7 @@ exports.getProfile = (req, res, next) => {
   const userId = req.user.userId;
 
   models.User.findOne({
-    attributes: ["firstname", "lastname", "email", "image"],
+    attributes: ["firstname", "lastname", "email", "image", "isAdmin"],
     where: { id: userId },
   })
     .then((user) => {
@@ -164,6 +165,7 @@ exports.updateProfile = (req, res, next) => {
   const userId = req.user.userId;
   const lastname = req.body.lastname;
   const firstname = req.body.firstname;
+  const isAdmin = req.body.isAdmin;
 
   models.User.findOne({
     where: { id: userId },
@@ -173,6 +175,7 @@ exports.updateProfile = (req, res, next) => {
         .update({
           lastname: lastname,
           firstname: firstname,
+          isAdmin: isAdmin,
         })
         .then((user) => {
           if (user) return res.status(201).json(user);
