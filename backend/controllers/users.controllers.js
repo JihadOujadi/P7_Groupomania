@@ -2,6 +2,7 @@ const bcrypt = require("bcrypt");
 const jwt = require("../middlewares/auth");
 const models = require("../models/");
 const user = require("../models/user");
+const fs = require("fs");
 require("dotenv").config({ path: "./config/.env" });
 
 // Création d'un utilisateur
@@ -264,21 +265,27 @@ exports.uploadImage = (req, res, next) => {
   models.User.findOne({
     where: { id: userId },
   })
-    .then((user) => {
-      user.update(
-          {
-            image: `${req.protocol}://${req.get("host")}/images/${
-              req.file.filename
-            }`,
-          },
-          { where: { id: userId } }
-        )
-    
-        .then(() => res.status(200).json(user = [user.lastname, user.firstname, user.image]))
-        .catch((error) =>
-          res.status(400).json({ error: "Mise à jour impossible" })
-        );
-    })
+  .then((user) => {
+    if (user.image !== null) {
+      const filename = user.image.split("/images/")[1];
+      fs.unlink(`images/${filename}`, () => {
+        user.update(
+        {
+          image: `${req.protocol}://${req.get("host")}/images/${
+            req.file.filename
+          }`,
+        },
+        { where: { id: userId } }
+      )
+          .then(() =>
+            res.status(200).json({ message: "Photo de profil mise à jour !" })
+          )
+          .catch((error) =>
+            res.status(400).json({ error: "Modification impossible" })
+          );
+      });
+    }
+  })
     .catch((error) => {
       res.status(500).json({ error: "Vérification impossible" });
     });

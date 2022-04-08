@@ -6,12 +6,12 @@
         <article>
           <h1>Votre profil</h1>
           <figure class="user-pic picture picture-content">
-            <img class="user-pic__img" :src="userInfo.image" />
             <img
               class="user-pic__img"
               src="@/assets/avatar-default.png"
               v-if="userInfo.image == null"
             />
+            <img class="user-pic__img" v-else :src="userInfo.image" />
           </figure>
           <button @click="upload = !upload" class="bouton bouton__image">
             Modifier l'image
@@ -104,6 +104,7 @@ export default {
           headers: { Authorization: `Bearer ${token}` },
         })
         .then((response) => {
+          console.log(response.data);
           this.userInfo = response.data;
         })
         .catch((error) => {
@@ -274,9 +275,15 @@ hr {
 }
 .card--post {
   margin-top: 50px;
+  max-width: 800px;
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-around;
 }
+
 .card--post img {
-  width: 40%;
+  width: 350px;
 }
 .card--post__img {
   border-radius: 15px;

@@ -88,11 +88,14 @@ exports.getOnePost = (req, res, next) => {
 
   models.Message.findOne({
     where: { id: messageId },
-    include: {
+    include: [{
       model: models.User,
       as: "User",
       attributes: ["firstname", "lastname"],
     },
+    { model: models.Comment }
+  ],
+    
   })
     .then((message) => {
       `${req.protocol}://${req.get("host")}/images/${message.image}`;
@@ -155,19 +158,12 @@ exports.deletePost = (req, res, next) => {
   })
     .then((message) => {
       if (message.userId === userId || isAdmin === true) {
-        if (message.image !== null) {
+        if (message.image != null) {
           const filename = message.image.split("/images/")[1];
-          fs.unlink(`images/${filename}`, () => {
-            message
-              .destroy()
-              .then(() =>
-                res.status(200).json({ message: "Message supprimé !" })
-              )
-              .catch((error) =>
-                res.status(400).json({ error: "Suppression impossible" })
-              );
+          fs.unlink(`images/${filename}`, (error) => {
+            if(error) throw error;
           });
-        } else {
+        } 
           message
             .destroy()
             .then(() => {
@@ -181,7 +177,6 @@ exports.deletePost = (req, res, next) => {
                 message: "Le message ne peux pas être supprimé",
               });
             });
-        }
       }
     })
     .catch((error) => {
@@ -189,6 +184,8 @@ exports.deletePost = (req, res, next) => {
         error: "Vérification impossible",
       });
     });
+
+    
 };
 
 // Middleware Like
@@ -236,7 +233,7 @@ exports.likePost = (req, res, next) => {
                     })
                       .then(() => {
                         messageFound.update(
-                          { likes: likes - 1 },
+                          { likes: messageFound.likes - 1 },
                           { where: { id: messageFound.id } }
                         );
                         if (messageFound.likes < 0) {
@@ -329,12 +326,14 @@ exports.deleteComment = (req, res, next) => {
   const userId = req.user.userId;
   const messageId = req.params.messageId;
   const contentId = req.params.id;
+  const isAdmin = req.user.isAdmin;
+  console.log(isAdmin);
 
   models.Comment.findOne({
     where: { messageId: messageId, id: contentId },
   })
     .then((comment) => {
-      if (comment.userId === userId || isAdmin === true) {
+      if (isAdmin != false) {
         comment
           .destroy()
           .then(() => {

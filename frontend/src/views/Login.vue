@@ -70,7 +70,6 @@
 
 <script>
 import axios from "axios";
-
 export default {
   name: "Login",
   data() {
@@ -142,7 +141,11 @@ export default {
       await axios
         .post("http://localhost:8080/api/users/signup", data)
         .then((response) => {
-          alert("Votre compte a bien été créé. Vous pouvez vous connecter");
+          alert(
+            "Votre compte a été créé avec succés" +
+              "\n" +
+              "Vous pouvez désormais vous connecter"
+          );
           document.location.reload();
         })
         .catch((error) => {

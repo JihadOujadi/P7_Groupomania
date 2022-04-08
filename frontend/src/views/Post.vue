@@ -17,16 +17,11 @@
           <div class="card--info__bottom">
             <!-- Likes -->
             <div class="card--like">
-              <span
-                >like
-                <button class="post-comment">
-                  <font-awesome-icon
-                    icon="thumbs-up"
-                    class="like"
-                    @click.prevent="likePost"
-                  />
-                </button>
-              </span>
+              <button class="post-comment">
+                <span>{{ postInfo.likes }}</span>
+                <font-awesome-icon icon="heart" class="like" @click.prevent="likePost" />
+              </button>
+
               <span
                 >{{ comments.length }}
                 <font-awesome-icon icon="comment" class="commentaire"
@@ -129,8 +124,17 @@
                   <strong>{{ userComment.User.firstname }}</strong>
                 </p>
                 <p class="card--comment__comment">" {{ userComment.comment }} "</p>
-                <p class="card--comment__date">{{ userComment.createdAt }}</p>
+                <p class="card--comment__date">
+                  {{ dateParser(userComment.createdAt) }}
+                </p>
               </span>
+              <button
+                class="delete-comment"
+                @click="deleteComment()"
+                v-if="userInfo.isAdmin"
+              >
+                Supprimer le commentaire
+              </button>
             </div>
           </div>
         </article>
@@ -149,6 +153,9 @@ const id = paramsId.get("id");
 
 export default {
   name: "Post",
+  props: {
+    commentId: Number,
+  },
   data() {
     return {
       title: "",
@@ -193,6 +200,7 @@ export default {
           headers: { Authorization: `Bearer ${token}` },
         })
         .then((response) => {
+          console.log(response.data);
           this.postInfo = response.data;
           this.user = response.data.User;
         })
@@ -265,9 +273,9 @@ export default {
           this.error = error.response.data;
         });
     },
-    likePost() {
+    async likePost() {
       let token = localStorage.getItem("token");
-      axios
+      await axios
         .post(
           "http://localhost:8080/api/posts/" + this.id + "/like",
           {},
@@ -276,9 +284,41 @@ export default {
           }
         )
         .then((response) => {
-          console.log(response);
+          this.onePost();
         })
         .catch((error) => {});
+    },
+    async deleteComment(postInfo) {
+      let token = localStorage.getItem("token");
+      await axios
+        .delete(
+          "http://localhost:8080/api/posts/" + this.id + "/comment/" + this.commentId,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        )
+        .then((response) => {
+          console.log(response.data);
+        })
+        .catch((error) => {
+          this.error = error.response.data;
+        });
+    },
+    dateParser(num) {
+      let options = {
+        hour: "2-digit",
+        minute: "2-digit",
+        weekday: "long",
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+      };
+
+      let timestamp = Date.parse(num);
+
+      let date = new Date(timestamp).toLocaleDateString("fr-FR", options);
+
+      return date.toString();
     },
   },
   mounted() {
@@ -337,10 +377,14 @@ export default {
 }
 
 .like {
-  font-size: 23px;
+  font-size: 20px;
+}
+
+.like:hover {
+  color: #fd5d5d;
 }
 .commentaire {
-  font-size: 23px;
+  font-size: 20px;
   margin-right: 10px;
 }
 .like,
@@ -375,7 +419,10 @@ textarea {
   border: none;
   background: none;
   cursor: pointer;
-  margin-left: 20px;
+  margin-left: 10px;
+}
+.card--like span {
+  font-size: 16px;
 }
 .card--comment__user {
   margin-top: 15px;
@@ -383,9 +430,21 @@ textarea {
   border: 1px solid #f2f2f2;
   border-radius: 15px;
   padding: 10px;
+  display: flex;
+  justify-content: space-between;
 }
 .card--comment__date {
   font-size: 12px;
+}
+.delete-comment {
+  border: none;
+  align-self: flex-end;
+  cursor: pointer;
+  transition: 0.2s ease-in-out;
+  font-size: 12px;
+}
+.delete-comment:hover {
+  color: #c84b31;
 }
 .fade-enter-active,
 .fade-leave-active {

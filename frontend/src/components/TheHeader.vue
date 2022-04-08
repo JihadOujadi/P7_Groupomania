@@ -7,7 +7,12 @@
       <ul class="navbar--list">
         <li class="navbar--list__element">
           <span class="user-pic picture picture-content">
-            <img :src="userInfo.image" alt="user-pic" class="user-pic__img" />
+            <img
+              class="user-pic__img"
+              src="@/assets/avatar-default.png"
+              v-if="userInfo.image == null"
+            />
+            <img v-else :src="userInfo.image" alt="user-pic" class="user-pic__img" />
           </span>
           <p>
             <strong> {{ userInfo.firstname }} </strong>

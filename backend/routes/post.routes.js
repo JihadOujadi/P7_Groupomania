@@ -15,7 +15,7 @@ router.put('/:id', auth.getUser, multer, postsControl.modifyPost);
 router.delete('/:id', auth.getUser, multer, postsControl.deletePost);
 router.post('/:id/comment', auth.getUser, postsControl.addComment);
 router.get('/:id/comment', postsControl.getComment);
-router.delete('/:id/comment/:id', auth.getUser, postsControl.deleteComment);
+router.delete('/:messageId/comment/:id', auth.getUser, postsControl.deleteComment);
 router.post('/:id/like', auth.getUser, postsControl.likePost);
 
 

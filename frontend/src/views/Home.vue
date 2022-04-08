@@ -6,7 +6,12 @@
       <section class="post">
         <div class="post--title">
           <figure class="user-pic picture picture-content">
-            <img :src="userInfo.image" class="user-pic__img" />
+            <img
+              class="user-pic__img"
+              src="@/assets/avatar-default.png"
+              v-if="userInfo.image == null"
+            />
+            <img v-else :src="userInfo.image" alt="user-pic" class="user-pic__img" />
           </figure>
           <h2>Dîtes-nous tout...</h2>
         </div>
@@ -70,12 +75,12 @@
           <div class="card--social">
             <span
               >{{ messages.likes }}
-              <button @click.prevent="likePost">
-                <font-awesome-icon icon="thumbs-up" />
-              </button>
+              <font-awesome-icon icon="heart" class="liked" v-if="messages.likes >= 1" />
+              <font-awesome-icon icon="heart" class="like" v-else />
             </span>
             <span
-              >{{ messages.Comments.length }} <font-awesome-icon icon="comment"
+              >{{ messages.Comments.length }}
+              <font-awesome-icon icon="comment" class="commentaire"
             /></span>
           </div>
         </article>
@@ -171,29 +176,27 @@ export default {
         .get("http://localhost:8080/api/posts/" + this.id + "/comment", {
           headers: { Authorization: `Bearer ${token}` },
         })
-        .then((response) => {
-          console.log(response.data);
-        });
+        .then((response) => {});
     },
-    async likePost() {
-      let token = localStorage.getItem("token");
-      await axios
-        .post("http://localhost:8080/api/posts/" + this.id + "/like", {
-          headers: { Authorization: `Bearer ${token}` },
-        })
-        .then((response) => {
-          console.log(response);
-        })
-        .catch((error) => {
-          this.error = error.response.data;
-        });
-    },
+    // async likePost() {
+    //   let token = localStorage.getItem("token");
+    //   await axios
+    //     .post("http://localhost:8080/api/posts/" + this.id + "/like", {
+    //       headers: { Authorization: `Bearer ${token}` },
+    //     })
+    //     .then((response) => {
+    //       console.log(response);
+    //     })
+    //     .catch((error) => {
+    //       this.error = error.response.data;
+    //     });
+    // },
   },
   mounted() {
     this.infoProfil();
     this.allPost();
     this.getComment();
-    this.likePost();
+    // this.likePost();
   },
 };
 </script>
@@ -352,6 +355,20 @@ img {
   display: flex;
   gap: 10px;
   align-items: center;
+  margin-top: 10px;
+  margin-left: 10px;
+}
+.like,
+.commentaire,
+.liked {
+  font-size: 19px;
+  margin-left: 3px;
+}
+.liked {
+  color: #fd5d5d;
+}
+.bouton-like {
+  border: none;
 }
 .card {
   margin-bottom: 40px;
@@ -377,5 +394,12 @@ img {
   width: 150px;
   font-size: 13px;
   padding: 10px;
+}
+.form--content input[type="file"] {
+  position: absolute;
+  opacity: 1;
+  transform: translate(-3px, -50%);
+  cursor: pointer;
+  padding: 10px 20px;
 }
 </style>
