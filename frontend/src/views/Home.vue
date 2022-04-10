@@ -38,23 +38,19 @@
         </form>
         <div class="form__button">
           <button class="bouton bouton__image" @click.prevent="newPost">Publier</button>
-          <button class="bouton bouton__image" @click="upload = !upload">
-            Ajouter une photo
-          </button>
           <div class="form">
-            <transition name="fade">
-              <form enctype="multipart/form-data" v-if="upload">
-                <div class="form--content">
-                  <input
-                    type="file"
-                    ref="file"
-                    class="input__file"
-                    accept=".jpg, .jpeg, .png, .gif"
-                    @change="selectedFile"
-                  />
-                </div>
-              </form>
-            </transition>
+            <div class="form--content">
+              <img id="file-preview" :src="image" />
+              <label class="bouton bouton__image" for="image"> Ajouter une photo </label>
+              <input
+                type="file"
+                id="image"
+                ref="file"
+                class="input__file"
+                accept=".jpg, .jpeg, .png, .gif"
+                @change="selectedFile"
+              />
+            </div>
           </div>
         </div>
       </section>
@@ -68,7 +64,11 @@
               <h2 class="card--title">{{ messages.title }}</h2>
               <p class="card--content">{{ messages.content }}</p>
               <figure>
-                <img :src="messages.image" class="content__image" />
+                <img
+                  :src="messages.image"
+                  v-if="messages.image !== null"
+                  class="content__image"
+                />
               </figure>
             </div>
           </a>
@@ -107,12 +107,12 @@ export default {
       userInfo: [],
       postInfo: [],
       comments: [],
-      upload: false,
       title: "",
       content: "",
       file: "",
       likes: "",
       id: this.$route.params.id,
+      image: "",
     };
   },
   components: {
@@ -176,27 +176,16 @@ export default {
         .get("http://localhost:8080/api/posts/" + this.id + "/comment", {
           headers: { Authorization: `Bearer ${token}` },
         })
-        .then((response) => {});
+        .then((response) => {})
+        .catch((error) => {
+          this.error = error.response.data;
+        });
     },
-    // async likePost() {
-    //   let token = localStorage.getItem("token");
-    //   await axios
-    //     .post("http://localhost:8080/api/posts/" + this.id + "/like", {
-    //       headers: { Authorization: `Bearer ${token}` },
-    //     })
-    //     .then((response) => {
-    //       console.log(response);
-    //     })
-    //     .catch((error) => {
-    //       this.error = error.response.data;
-    //     });
-    // },
   },
   mounted() {
     this.infoProfil();
     this.allPost();
     this.getComment();
-    // this.likePost();
   },
 };
 </script>
@@ -295,12 +284,31 @@ form {
   border: 1px solid #efefef;
   margin-bottom: 15px;
 }
-.form {
-  display: flex;
-  justify-content: flex-end;
-  padding: 10px;
-  gap: 10px;
-  width: 100px;
+.form-input {
+  width: 350px;
+  padding: 20px;
+  background: #fff;
+  box-shadow: -3px -3px 7px rgba(94, 104, 121, 0.377),
+    3px 3px 7px rgba(94, 104, 121, 0.377);
+}
+.form img {
+  width: 100%;
+  display: none;
+  margin-bottom: 30px;
+  border-radius: 20px;
+}
+.form input {
+  display: none;
+}
+.form label {
+  display: block;
+  width: 150px;
+  text-align: center;
+  background: #fff;
+  color: #c84b31;
+  font-size: 13px;
+  border-radius: 10px;
+  cursor: pointer;
 }
 .bouton {
   margin-top: 20px;
@@ -315,6 +323,7 @@ form {
 .form__button {
   display: flex;
   flex-direction: row-reverse;
+  align-items: center;
   gap: 10px;
   margin-bottom: 5px;
   margin-right: 5px;
@@ -351,6 +360,9 @@ img {
   width: 100%;
   height: 100%;
 }
+.content__image__null {
+  display: none;
+}
 .card--social {
   display: flex;
   gap: 10px;
@@ -373,14 +385,6 @@ img {
 .card {
   margin-bottom: 40px;
 }
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.5s;
-}
-.fade-enter,
-.fade-leave-to {
-  opacity: 0;
-}
 .settings {
   border: none;
   background: none;
@@ -401,5 +405,16 @@ img {
   transform: translate(-3px, -50%);
   cursor: pointer;
   padding: 10px 20px;
+}
+@media screen and (max-width: 768px) {
+  .home h1 {
+    margin-left: 20px;
+  }
+  figure {
+    margin: 0 10px;
+  }
+  .card--social {
+    margin-left: 25px;
+  }
 }
 </style>

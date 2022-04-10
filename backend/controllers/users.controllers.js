@@ -213,51 +213,6 @@ exports.deleteUser = (req, res, next) => {
     .catch((error) => res.status(500).json({ error: error }));
 };
 
-// modification  du mot de passe
-exports.updatePassword = (req, res, next) => {
-  const userId = req.user.userId;
-
-  const { oldPassword, newPassword } = req.body;
-
-  models.User.findOne({ id: userId })
-    .then((user) => {
-      if (!user) {
-        return res.status(401).json({ error: "Utilisateur non trouvé" });
-      }
-      bcrypt
-        .compare(oldPassword, user.password)
-        .then((valid) => {
-          if (!valid) {
-            return res.status(401).json({ error: "Mot de passe incorrect" });
-          } else {
-            bcrypt.hash(newPassword, 10, (err, hash) => {
-              user
-                .update({
-                  password: hash,
-                  where: { id: userId },
-                })
-                .then((user) => {
-                  return res.status(201).json({
-                    userId: user.id,
-                    message: "Mot de passe modifié",
-                  });
-                })
-                .catch((error) =>
-                  res.status(500).json({ error: "Modification impossible" })
-                );
-            });
-          }
-        })
-        .catch((error) =>
-          res
-            .status(500)
-            .json({ error: "Impossible de modifier le mot de passe" })
-        );
-    })
-    .catch((error) =>
-      res.status(500).json({ error: "Vérification impossible" })
-    );
-};
 
 exports.uploadImage = (req, res, next) => {
   const userId = req.user.userId;
@@ -283,7 +238,22 @@ exports.uploadImage = (req, res, next) => {
           .catch((error) =>
             res.status(400).json({ error: "Modification impossible" })
           );
-      });
+      })
+    }else{
+      user.update(
+        {
+          image: `${req.protocol}://${req.get("host")}/images/${
+            req.file.filename
+          }`,
+        },
+        { where: { id: userId } }
+      )
+          .then(() =>
+            res.status(200).json({ message: "Photo de profil mise à jour !" })
+          )
+          .catch((error) =>
+            res.status(400).json({ error: "Modification impossible" })
+          );
     }
   })
     .catch((error) => {

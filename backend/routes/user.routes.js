@@ -12,7 +12,6 @@ router.get('/profile', auth.getUser, userControl.getProfile);
 router.get('/profile/messages', auth.getUser, userControl.getUserMessage)
 router.put('/update-profile', auth.getUser, userControl.updateProfile);
 router.delete('/delete-profile', auth.getUser, userControl.deleteUser);
-router.put('/update-password', auth.getUser, userControl.updatePassword);
 router.post('/upload', auth.getUser, multer, userControl.uploadImage);
 
 

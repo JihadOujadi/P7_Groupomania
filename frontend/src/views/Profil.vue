@@ -13,9 +13,9 @@
             />
             <img class="user-pic__img" v-else :src="userInfo.image" />
           </figure>
-          <button @click="upload = !upload" class="bouton bouton__image">
+          <label @click="upload = !upload" for="image" class="bouton bouton__image">
             Modifier l'image
-          </button>
+          </label>
           <transition name="fade">
             <form
               enctype="multipart/form-data"
@@ -26,6 +26,7 @@
                 <input
                   type="file"
                   name="image"
+                  id="image"
                   class="input__file"
                   accept=".jpg, .jpeg, .png, .gif"
                   @change="fileUpload"
@@ -236,6 +237,7 @@ article > h1 {
   margin-top: 45px;
   padding: 5px;
   align-self: center;
+  text-align: center;
 }
 .form {
   width: 100px;
@@ -295,5 +297,10 @@ hr {
 .fade-enter,
 .fade-leave-to {
   opacity: 0;
+}
+@media screen and (max-width: 768px) {
+  .card--info {
+    padding: 0 15px;
+  }
 }
 </style>

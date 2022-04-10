@@ -1,9 +1,0 @@
-{
-  "development": {
-    "username": "newuser",
-    "password": "ocrstudent",
-    "database": "groupomania",
-    "host": "127.0.0.1",
-    "dialect": "mysql"
-  }
-}

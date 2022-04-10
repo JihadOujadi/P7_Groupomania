@@ -109,4 +109,15 @@ li {
   height: 100%;
   object-fit: cover;
 }
+@media screen and (max-width: 768px) {
+  header {
+    flex-direction: column;
+  }
+  .navbar {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 20px;
+  }
+}
 </style>

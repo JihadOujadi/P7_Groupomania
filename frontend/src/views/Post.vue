@@ -17,10 +17,11 @@
           <div class="card--info__bottom">
             <!-- Likes -->
             <div class="card--like">
-              <button class="post-comment">
+              <label class="post-comment" for="like">
                 <span>{{ postInfo.likes }}</span>
-                <font-awesome-icon icon="heart" class="like" @click.prevent="likePost" />
-              </button>
+                <input type="checkbox" id="like" @click.prevent="likePost" />
+                <font-awesome-icon icon="heart" class="like" />
+              </label>
 
               <span
                 >{{ comments.length }}
@@ -41,7 +42,7 @@
                 <button
                   class="bouton bouton--settings"
                   @click="update = !update"
-                  v-if="settings"
+                  v-if="settings && idUser == postInfo.userId"
                 >
                   Modifier le post
                 </button>
@@ -52,6 +53,7 @@
                       type="text"
                       placeholder="Votre titre"
                       id="title"
+                      name="title"
                       class="form-row__input"
                       v-model="title"
                     />
@@ -59,6 +61,7 @@
                     <textarea
                       type="text"
                       id="content"
+                      name="content"
                       rows="6"
                       cols="33"
                       class="form-row__input__content"
@@ -94,7 +97,12 @@
           <div class="card--comment">
             <div class="card--comment__form">
               <span class="user-pic picture picture-content">
-                <img :src="userInfo.image" class="user-pic__img" />
+                <img
+                  class="user-pic__img"
+                  src="@/assets/avatar-default.png"
+                  v-if="userInfo.image == null"
+                />
+                <img v-else :src="userInfo.image" alt="user-pic" class="user-pic__img" />
               </span>
               <div class="comments">
                 <label for="comment"></label>
@@ -114,28 +122,7 @@
               </div>
             </div>
             <!-- Commentaires utilisateurs -->
-            <div
-              class="card--comment__user"
-              v-for="userComment in comments"
-              :key="userComment.id"
-            >
-              <span>
-                <p class="card--comment__title">
-                  <strong>{{ userComment.User.firstname }}</strong>
-                </p>
-                <p class="card--comment__comment">" {{ userComment.comment }} "</p>
-                <p class="card--comment__date">
-                  {{ dateParser(userComment.createdAt) }}
-                </p>
-              </span>
-              <button
-                class="delete-comment"
-                @click="deleteComment()"
-                v-if="userInfo.isAdmin"
-              >
-                Supprimer le commentaire
-              </button>
-            </div>
+            <Comment :comments="comments" :userInfo="userInfo" />
           </div>
         </article>
       </section>
@@ -146,6 +133,7 @@
 <script>
 import axios from "axios";
 import TheHeader from "../components/TheHeader.vue";
+import Comment from "../components/Comment.vue";
 
 const paramsId = new URLSearchParams(location.search);
 
@@ -153,9 +141,6 @@ const id = paramsId.get("id");
 
 export default {
   name: "Post",
-  props: {
-    commentId: Number,
-  },
   data() {
     return {
       title: "",
@@ -168,9 +153,9 @@ export default {
       id: this.$route.params.id,
       comment: "",
       likeNumber: "",
-      comments: [],
       postInfo: [],
       userInfo: [],
+      comments: [],
       update: false,
       settings: false,
       idUser: localStorage.getItem("user"),
@@ -178,6 +163,7 @@ export default {
   },
   components: {
     TheHeader,
+    Comment,
   },
   methods: {
     async infoProfil() {
@@ -187,6 +173,7 @@ export default {
           headers: { Authorization: `Bearer ${token}` },
         })
         .then((response) => {
+          console.log(response.data);
           this.userInfo = response.data;
         })
         .catch((error) => {
@@ -203,6 +190,8 @@ export default {
           console.log(response.data);
           this.postInfo = response.data;
           this.user = response.data.User;
+          this.title = response.data.title;
+          this.content = response.data.content;
         })
         .catch((error) => {
           this.error = error.response.data;
@@ -230,6 +219,7 @@ export default {
         .then((response) => {
           this.comment = "";
           this.getComment();
+          this.onePost();
         })
         .catch((error) => {
           this.error = error.response.data;
@@ -251,31 +241,32 @@ export default {
     selectedFile(event) {
       this.FILE = event.target.files[0];
     },
-    async updatePost() {
+    updatePost() {
       let token = localStorage.getItem("token");
       const formData = new FormData();
       if (this.FILE == null) {
-        formData.set("title", this.title);
-        formData.set("content", this.content);
+        formData.append("title", this.title);
+        formData.append("content", this.content);
       } else {
         formData.set("title", this.title);
         formData.set("content", this.content);
         formData.set("image", this.FILE, this.FILE.name);
       }
-      await axios
+      axios
         .put("http://localhost:8080/api/posts/" + this.id, formData, {
           headers: { Authorization: `Bearer ${token}` },
         })
         .then((response) => {
+          console.log(response);
           document.location.reload();
         })
         .catch((error) => {
           this.error = error.response.data;
         });
     },
-    async likePost() {
+    likePost() {
       let token = localStorage.getItem("token");
-      await axios
+      axios
         .post(
           "http://localhost:8080/api/posts/" + this.id + "/like",
           {},
@@ -288,38 +279,6 @@ export default {
         })
         .catch((error) => {});
     },
-    async deleteComment(postInfo) {
-      let token = localStorage.getItem("token");
-      await axios
-        .delete(
-          "http://localhost:8080/api/posts/" + this.id + "/comment/" + this.commentId,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        )
-        .then((response) => {
-          console.log(response.data);
-        })
-        .catch((error) => {
-          this.error = error.response.data;
-        });
-    },
-    dateParser(num) {
-      let options = {
-        hour: "2-digit",
-        minute: "2-digit",
-        weekday: "long",
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-      };
-
-      let timestamp = Date.parse(num);
-
-      let date = new Date(timestamp).toLocaleDateString("fr-FR", options);
-
-      return date.toString();
-    },
   },
   mounted() {
     this.infoProfil();
@@ -329,7 +288,7 @@ export default {
 };
 </script>
 
-<style scoped>
+<style>
 .picture {
   width: 40px;
   height: 37px;
@@ -375,13 +334,18 @@ export default {
   align-items: center;
   gap: 20px;
 }
-
+.card--like input {
+  display: none;
+}
 .like {
   font-size: 20px;
+  transition: 0.3s ease-in-out;
 }
-
 .like:hover {
   color: #fd5d5d;
+}
+.card--like input:checked + .like {
+  color: red;
 }
 .commentaire {
   font-size: 20px;
@@ -414,6 +378,10 @@ textarea {
 }
 .send {
   font-size: 20px;
+  transition: 0.2s ease-in-out;
+}
+.send:hover {
+  color: #5d8bf4;
 }
 .post-comment {
   border: none;
@@ -453,5 +421,15 @@ textarea {
 .fade-enter,
 .fade-leave-to {
   opacity: 0;
+}
+
+@media screen and (max-width: 768px) {
+  .card--info__bottom {
+    padding: 0 20px;
+    margin: 0;
+  }
+  .card--comment {
+    padding: 0 20px;
+  }
 }
 </style>

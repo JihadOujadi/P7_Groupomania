@@ -88,14 +88,15 @@ exports.getOnePost = (req, res, next) => {
 
   models.Message.findOne({
     where: { id: messageId },
-    include: [{
-      model: models.User,
-      as: "User",
-      attributes: ["firstname", "lastname"],
-    },
-    { model: models.Comment }
-  ],
-    
+    include: [
+      {
+        model: models.User,
+        as: "User",
+        attributes: ["firstname", "lastname"],
+      },
+      { model: models.Comment },
+      { model: models.Like },
+    ],
   })
     .then((message) => {
       `${req.protocol}://${req.get("host")}/images/${message.image}`;
@@ -113,70 +114,76 @@ exports.modifyPost = (req, res, next) => {
   const title = req.body.title;
   const content = req.body.content;
 
-  models.Message.findOne({
-    atributes: ["id", "title", "content", "image"],
-    where: { id: userId, id: messageId },
-  })
-    .then((messages) => {
-      console.log(messages);
-
-      if (messages.userId === userId || isAdmin === true) {
-        if (messages.image !== null) {
-          const filename = messages.image.split("/images/")[1];
-          fs.unlink(`images/${filename}`, () => {
-            messages
-              .update({
-                title: title ? title : messages.title,
-                content: content ? content : messages.content,
-                image: `${req.protocol}://${req.get("host")}/images/${
-                  req.file.filename
-                }`,
-              })
-              .then(() =>
-                res.status(200).json({ message: "Post mis à jour !" })
-              )
-              .catch((error) =>
-                res.status(400).json({ error: "Modification impossible" })
-              );
+  if (req.file) {
+    models.Message.findOne({ where: { id: messageId } })
+      .then((message) => {
+        if (message.userId !== userId) {
+          res.status(400).json({
+            error: new Error("Requête non autorisée"),
           });
         }
-      } else {
-        return res.status(409).json({ error: "Mis à jour impossible" });
+        const filename = message.image.split("/images/")[1];
+        if (message.image !== null) {
+          fs.unlink(`images/${filename}`, (error) => {
+            if (error) throw error;
+          });
+        }
+      })
+      .catch((error) => res.status(500).json({ error }));
+  }
+  const updatePost = req.file
+    ? {
+        title: title ? title : message.title,
+        content: content ? content : message.content,
+        image: `${req.protocol}://${req.get("host")}/images/${
+          req.file.filename
+        }`,
       }
+    : { ...req.body };
+  models.Message.update(
+    {
+      ...updatePost,
+      id: messageId,
+    },
+    { where: { id: messageId } }
+  )
+    .then(() => {
+      return res.status(200).json({ message: "Post modifié !" });
     })
-    .catch((error) =>
-      res.status(500).json({ error: "Vérification impossible" })
-    );
+    .catch((error) => {
+      return res.status(400).json({ error });
+    });
 };
 
 exports.deletePost = (req, res, next) => {
   const userId = req.user.userId;
   const messageId = req.params.id;
+  const isAdmin = req.user.isAdmin;
 
   models.Message.findOne({
     where: { id: messageId },
   })
     .then((message) => {
-      if (message.userId === userId || isAdmin === true) {
+      if (isAdmin) {
         if (message.image != null) {
           const filename = message.image.split("/images/")[1];
           fs.unlink(`images/${filename}`, (error) => {
-            if(error) throw error;
+            if (error) throw error;
           });
-        } 
-          message
-            .destroy()
-            .then(() => {
-              res.status(200).json({
-                message: "Message supprimé !",
-              });
-            })
-            .catch((error) => {
-              res.status(400).json({
-                error: error,
-                message: "Le message ne peux pas être supprimé",
-              });
+        }
+        message
+          .destroy()
+          .then(() => {
+            res.status(200).json({
+              message: "Message supprimé !",
             });
+          })
+          .catch((error) => {
+            res.status(400).json({
+              error: error,
+              message: "Le message ne peux pas être supprimé",
+            });
+          });
       }
     })
     .catch((error) => {
@@ -184,8 +191,6 @@ exports.deletePost = (req, res, next) => {
         error: "Vérification impossible",
       });
     });
-
-    
 };
 
 // Middleware Like
@@ -193,7 +198,7 @@ exports.deletePost = (req, res, next) => {
 exports.likePost = (req, res, next) => {
   const userId = req.user.userId;
   const messageId = req.params.id;
-  
+
   models.Message.findOne({
     where: { id: messageId },
   })
@@ -272,7 +277,7 @@ exports.likePost = (req, res, next) => {
 exports.addComment = (req, res, next) => {
   const userId = req.user.userId;
   const messageId = req.params.id;
-  const comment = req.body.comment; 
+  const comment = req.body.comment;
 
   models.Message.findOne({
     where: { id: messageId },
@@ -327,7 +332,6 @@ exports.deleteComment = (req, res, next) => {
   const messageId = req.params.messageId;
   const contentId = req.params.id;
   const isAdmin = req.user.isAdmin;
-  console.log(isAdmin);
 
   models.Comment.findOne({
     where: { messageId: messageId, id: contentId },
