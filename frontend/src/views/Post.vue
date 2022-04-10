@@ -85,7 +85,7 @@
                 </transition>
                 <button
                   class="bouton bouton--settings"
-                  v-if="settings"
+                  v-if="settings && userInfo.isAdmin"
                   @click="deletePost()"
                 >
                   Supprimer le post
