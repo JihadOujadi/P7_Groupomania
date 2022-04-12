@@ -300,7 +300,16 @@ hr {
 }
 @media screen and (max-width: 768px) {
   .card--info {
-    padding: 0 15px;
+    width: 400px;
+  }
+  .bouton__image {
+    margin-top: 37px;
+  }
+  .bouton__update {
+    font-size: 13px;
+  }
+  .bouton__disconnect {
+    font-size: 12px;
   }
 }
 </style>

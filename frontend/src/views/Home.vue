@@ -416,5 +416,8 @@ img {
   .card--social {
     margin-left: 25px;
   }
+  .bouton {
+    width: 100%;
+  }
 }
 </style>
